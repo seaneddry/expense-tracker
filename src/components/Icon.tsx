@@ -14,6 +14,9 @@ const paths: Record<string, string> = {
   upload: 'M12 16V4m0 0-4 4m4-4 4 4M5 15v4h14v-4',
   download: 'M12 4v12m0 0-4-4m4 4 4-4M5 19h14',
   logout: 'M10 5H5v14h5M15 8l4 4-4 4M19 12H9',
+  repeat: 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3',
+  bell: 'M6 16V11a6 6 0 1 1 12 0v5l2 2H4l2-2ZM10 21h4',
+  clip: 'm20 12-8 8a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8',
   receipt: 'M6 3h12v18l-3-2-3 2-3-2-3 2V3ZM9 8h6M9 12h6',
 };
 

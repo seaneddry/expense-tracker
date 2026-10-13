@@ -1,6 +1,13 @@
 # Backlog
 
-Not in v1, in rough priority order.
+Not built yet, in rough priority order.
+
+- Push notifications for subscription alerts (needs a scheduled Supabase function, web push keys and the app installed on the Home Screen)
+- iPhone Calendar feed (subscribe once, due dates appear in the Calendar app)
+- Future-dated price changes ("goes up from 1 Dec")
+- Mark a charge as paid for a cycle, skip a cycle
+- Variable bills (electricity, water) with an estimate and actual amounts
+- Foreign-currency subscriptions with an RM estimate
 
 - Loan tracker (money lent, repaid, outstanding per person). Needs its own migration and a new tab.
 - Recurring bills (rent, car loan) that create themselves each month

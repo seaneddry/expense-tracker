@@ -294,7 +294,7 @@ code {
   bottom: 0;
   z-index: 30;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   height: calc(var(--tabbar-h) + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
   background: var(--bar-bg);
@@ -1674,4 +1674,250 @@ body:has(.screen-form) .toast {
 .file-drop input {
   max-width: 100%;
   font-size: 15px;
+}
+
+/* =============================================================================
+   Subscriptions module
+   ============================================================================= */
+
+.tab-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.tab-badge {
+  position: absolute;
+  top: -4px;
+  right: -10px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 2px;
+  border-radius: 10px;
+  background: var(--fill);
+}
+
+.segmented button {
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--surface);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  .segmented button[aria-pressed='true'] {
+    background: var(--surface-2);
+  }
+}
+
+.sub-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  padding: 8px 16px;
+  color: inherit;
+  text-decoration: none;
+  background: var(--surface);
+}
+
+.sub-row + .sub-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  height: 0.5px;
+  background: var(--separator);
+}
+
+.sub-row:active {
+  background: var(--surface-2);
+}
+
+.sub-row-faded {
+  opacity: 0.6;
+}
+
+.sub-initial {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--fill);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.sub-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sub-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.sub-title > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.sub-sub.is-alert {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.sub-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sub-amount small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.badge-warn {
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface));
+  color: var(--danger);
+}
+
+.cal {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px 0;
+  padding: 12px 8px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.cal-dow {
+  padding-bottom: 6px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.cal-day {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 44px;
+  border: 0;
+  border-radius: 22px;
+  background: none;
+  color: var(--ink);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-day.is-today {
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  font-weight: 600;
+}
+
+.cal-day.is-selected {
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 600;
+}
+
+.cal-day.is-empty {
+  visibility: hidden;
+}
+
+.cal-dot {
+  position: absolute;
+  bottom: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 3px;
+  background: currentColor;
+}
+
+.cal-dot.is-trial {
+  background: var(--danger);
+}
+
+.alert-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+.trial-banner {
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+  color: var(--danger);
+}
+
+.trial-banner strong {
+  display: block;
+}
+
+.trial-banner span {
+  font-size: 14px;
+}
+
+.link-clean {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tab > span:last-child {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }

@@ -116,7 +116,7 @@ export function Settings() {
           </div>
         </div>
 
-        <p className="footnote">Expense Tracker v1.0.0</p>
+        <p className="footnote">Expense Tracker v1.1.0</p>
       </main>
     </Screen>
   );

@@ -66,3 +66,77 @@ export interface MonthTotal {
   total: number;
   transactions: number;
 }
+
+// ------------------------------------------------------- recurring payments
+export type RecurringKind = 'subscription' | 'bill' | 'renewal';
+export type RecurringCycle = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+export type RecurringStatus = 'active' | 'paused' | 'cancelled';
+
+export interface RecurringItem {
+  id: string;
+  name: string;
+  kind: RecurringKind;
+  amount: number;
+  cycle: RecurringCycle;
+  anchor_date: string;
+  trial_ends_on: string | null;
+  alert_days: number | null;
+  category: string | null;
+  payment_method: string | null;
+  notes: string | null;
+  url: string | null;
+  status: RecurringStatus;
+  ends_on: string | null;
+  next_due: string | null;
+  days_until: number | null;
+  in_trial: boolean;
+  yearly_cost: number;
+  monthly_cost: number;
+  alert_active: boolean;
+}
+
+export interface RecurringInput {
+  name: string;
+  kind: RecurringKind;
+  amount: number;
+  cycle: RecurringCycle;
+  anchor_date: string;
+  trial_ends_on: string | null;
+  alert_days: number | null;
+  category: string | null;
+  payment_method: string | null;
+  notes: string | null;
+  url: string | null;
+}
+
+export interface RecurringSummary {
+  monthly_commitment: number;
+  yearly_commitment: number;
+  active_count: number;
+  trial_count: number;
+  alert_count: number;
+}
+
+export interface RecurringDue {
+  day: string;
+  item_id: string;
+  name: string;
+  amount: number;
+  kind: RecurringKind;
+  is_trial_end: boolean;
+}
+
+export interface PriceChange {
+  id: string;
+  old_amount: number;
+  new_amount: number;
+  changed_on: string;
+}
+
+export interface Attachment {
+  id: string;
+  storage_path: string;
+  file_name: string;
+  content_type: string | null;
+  size_bytes: number | null;
+}

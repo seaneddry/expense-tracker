@@ -44,3 +44,17 @@ GitHub Actions builds and deploys. Users get the update on next open (the PWA up
 - Sign-ups stay disabled in Supabase Auth.
 - Every new table needs `enable row level security` and an owner policy.
 - Never put the `service_role` key in this repo or in the browser.
+
+## Subscriptions module
+
+- Tables are separate from the expense log on purpose. Do not add a foreign key between them.
+- The next due date is computed, never stored: `recurring_next_due(anchor_date, cycle, today)`.
+  Monthly, quarterly and yearly items keep the anchor's day of month and clamp to the end of
+  shorter months (an item anchored on the 31st is due on the 28th/29th/30th in short months).
+- A free trial sets `anchor_date` and `trial_ends_on` to the same date (the first real charge).
+  A database check enforces this. While `trial_ends_on` is today or later the item is "in trial"
+  and is left out of the monthly commitment.
+- Changing an item's amount is logged to `recurring_price_history` by a database trigger.
+- An alert is active when the next due date is within `alert_days` days. The tab badge counts them.
+- Attachments live in the private `recurring-attachments` bucket under `<user id>/<item id>/`.
+  Deleting an item removes its files first (see `deleteRecurring` in `src/api.ts`).

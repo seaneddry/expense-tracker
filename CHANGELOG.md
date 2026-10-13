@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.0
+
+New **Subscriptions** module for recurring payments, completely separate from the expense log.
+
+- Upcoming list grouped by This week, Later this month, Later
+- Monthly commitment (items in a free trial are not counted until the trial ends) and yearly cost per item
+- Calendar view with a dot on every due date
+- Alerts before the due date, set per item (1 to 30 days). Flagged items show a bell and a count badge on the tab
+- Free trial end date with a "cancel before" banner
+- Price history, recorded automatically whenever the amount changes
+- Yearly renewals (default alert 30 days ahead)
+- Optional attachments (photo or PDF, private storage)
+- Pause, resume, mark as cancelled, delete
+- Tab bar now has five tabs
+
 ## 1.0.0
 
 First release, replacing the Google Sheets tracker.

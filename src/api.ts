@@ -207,3 +207,124 @@ export async function ensureCategories(names: string[]): Promise<Category[]> {
   }
   return listCategories();
 }
+
+// ============================================================ recurring payments
+// A separate module: nothing here reads from or writes to the expense log.
+import type {
+  Attachment,
+  PriceChange,
+  RecurringDue,
+  RecurringInput,
+  RecurringItem,
+  RecurringSummary,
+} from './types';
+
+const OVERVIEW_COLS =
+  'id,name,kind,amount,cycle,anchor_date,trial_ends_on,alert_days,category,payment_method,notes,url,status,ends_on,next_due,days_until,in_trial,yearly_cost,monthly_cost,alert_active';
+const BUCKET = 'recurring-attachments';
+
+export async function listRecurring(): Promise<RecurringItem[]> {
+  const { data, error } = await supabase
+    .from('recurring_overview')
+    .select(OVERVIEW_COLS)
+    .order('next_due', { ascending: true, nullsFirst: false })
+    .order('name');
+  fail(error);
+  return (data ?? []) as RecurringItem[];
+}
+
+export async function getRecurring(id: string): Promise<RecurringItem | null> {
+  const { data, error } = await supabase.from('recurring_overview').select(OVERVIEW_COLS).eq('id', id).maybeSingle();
+  fail(error);
+  return (data as RecurringItem | null) ?? null;
+}
+
+export async function getRecurringSummary(): Promise<RecurringSummary> {
+  const { data, error } = await supabase.rpc('recurring_summary');
+  fail(error);
+  return data as RecurringSummary;
+}
+
+export async function getRecurringCalendar(month: string): Promise<RecurringDue[]> {
+  const { data, error } = await supabase.rpc('recurring_calendar', { p_month: month });
+  fail(error);
+  return (data ?? []) as RecurringDue[];
+}
+
+export async function createRecurring(input: RecurringInput): Promise<string> {
+  const { data, error } = await supabase.from('recurring_items').insert(input).select('id').single();
+  fail(error);
+  return (data as { id: string }).id;
+}
+
+export async function updateRecurring(
+  id: string,
+  patch: Partial<RecurringInput> & { status?: string; ends_on?: string | null },
+): Promise<void> {
+  const { error } = await supabase.from('recurring_items').update(patch).eq('id', id);
+  fail(error);
+}
+
+export async function deleteRecurring(id: string): Promise<void> {
+  // Remove the stored files first; the database rows go with the item.
+  const files = await listAttachments(id);
+  if (files.length > 0) {
+    const { error: storageError } = await supabase.storage.from(BUCKET).remove(files.map((f) => f.storage_path));
+    fail(storageError);
+  }
+  const { error } = await supabase.from('recurring_items').delete().eq('id', id);
+  fail(error);
+}
+
+export async function listPriceHistory(itemId: string): Promise<PriceChange[]> {
+  const { data, error } = await supabase
+    .from('recurring_price_history')
+    .select('id,old_amount,new_amount,changed_on')
+    .eq('item_id', itemId)
+    .order('changed_on', { ascending: false })
+    .order('created_at', { ascending: false });
+  fail(error);
+  return (data ?? []) as PriceChange[];
+}
+
+export async function listAttachments(itemId: string): Promise<Attachment[]> {
+  const { data, error } = await supabase
+    .from('recurring_attachments')
+    .select('id,storage_path,file_name,content_type,size_bytes')
+    .eq('item_id', itemId)
+    .order('created_at', { ascending: false });
+  fail(error);
+  return (data ?? []) as Attachment[];
+}
+
+export async function uploadAttachment(userId: string, itemId: string, file: File): Promise<void> {
+  if (!file.type) throw new Error('Could not tell what kind of file this is. Use a photo or a PDF.');
+  const safe = file.name.replace(/[^\w.-]+/g, '_');
+  const path = `${userId}/${itemId}/${crypto.randomUUID()}-${safe}`;
+  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type });
+  fail(uploadError);
+  const { error } = await supabase.from('recurring_attachments').insert({
+    item_id: itemId,
+    storage_path: path,
+    file_name: file.name,
+    content_type: file.type,
+    size_bytes: file.size,
+  });
+  if (error) {
+    await supabase.storage.from(BUCKET).remove([path]);
+    throw new Error(error.message);
+  }
+}
+
+export async function attachmentUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, 120);
+  fail(error);
+  return (data as { signedUrl: string }).signedUrl;
+}
+
+export async function deleteAttachment(att: Attachment): Promise<void> {
+  const { error: storageError } = await supabase.storage.from(BUCKET).remove([att.storage_path]);
+  fail(storageError);
+  const { error } = await supabase.from('recurring_attachments').delete().eq('id', att.id);
+  fail(error);
+}

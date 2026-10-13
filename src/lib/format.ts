@@ -68,3 +68,36 @@ export function parseAmount(input: string): number | null {
   const n = Number(cleaned);
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
 }
+
+/** "Fri 16 Oct" */
+export function shortDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  });
+}
+
+/** "16 Oct 2026" */
+export function longDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+export function inDays(n: number | null | undefined): string {
+  if (n === null || n === undefined) return '';
+  if (n <= 0) return 'today';
+  if (n === 1) return 'tomorrow';
+  return `in ${n} days`;
+}
+
+export const CYCLE_LABEL = { weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', yearly: 'Yearly' } as const;
+export const CYCLE_UNIT = { weekly: 'a week', monthly: 'a month', quarterly: 'a quarter', yearly: 'a year' } as const;
+export const KIND_LABEL = { subscription: 'Subscription', bill: 'Bill', renewal: 'Renewal' } as const;

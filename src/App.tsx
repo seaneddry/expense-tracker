@@ -9,6 +9,9 @@ import { Categories } from './screens/Categories';
 import { Budgets } from './screens/Budgets';
 import { Import } from './screens/Import';
 import { Login } from './screens/Login';
+import { Subscriptions } from './screens/Subscriptions';
+import { SubscriptionDetail } from './screens/SubscriptionDetail';
+import { SubscriptionForm } from './screens/SubscriptionForm';
 
 function RequireAuth() {
   const { session, loading } = useAuth();
@@ -43,6 +46,8 @@ const router = createBrowserRouter(
           children: [
             { path: '/', element: <Home /> },
             { path: '/history', element: <History /> },
+            { path: '/subscriptions', element: <Subscriptions /> },
+            { path: '/subscriptions/:id', element: <SubscriptionDetail /> },
             { path: '/settings', element: <Settings /> },
             { path: '/settings/categories', element: <Categories /> },
             { path: '/settings/budgets', element: <Budgets /> },
@@ -51,6 +56,8 @@ const router = createBrowserRouter(
         },
         { path: '/add', element: <TransactionForm /> },
         { path: '/edit/:id', element: <TransactionForm /> },
+        { path: '/subscriptions/new', element: <SubscriptionForm /> },
+        { path: '/subscriptions/:id/edit', element: <SubscriptionForm /> },
         { path: '*', element: <Navigate to="/" replace /> },
       ],
     },

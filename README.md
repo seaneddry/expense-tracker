@@ -15,6 +15,7 @@ Replaces the old Google Sheets + Apps Script setup.
 | Home | Month picker, spent so far, budget pace, KPIs, category vs budget, day-by-day calendar |
 | History | Search, filter by category or "To check", edit or delete |
 | + | Quick add: amount, description (autocomplete fills the category), date, category |
+| Subscriptions | Recurring payments: upcoming list, calendar, monthly commitment, alerts, trials, price history |
 | Settings | Categories, budgets and income, import from Google Sheets, CSV backup, sign out |
 
 ## Quick start
@@ -42,5 +43,10 @@ docs/               setup and maintenance guides
 
 `categories`, `transactions`, `budgets` (a row applies from `effective_from` onward), `income`
 (same idea), plus the views `monthly_totals` and `description_suggestions` and the functions
-`dashboard_kpis`, `category_breakdown` and `daily_totals`. The dashboard maths lives in SQL, so any
+`dashboard_kpis`, `category_breakdown` and `daily_totals`.
+
+The Subscriptions module has its own tables (`recurring_items`, `recurring_price_history`,
+`recurring_attachments`), the view `recurring_overview`, the functions `recurring_summary`,
+`recurring_calendar` and `recurring_next_due`, and a private storage bucket. It never reads from
+or writes to the expense log. The dashboard maths lives in SQL, so any
 future client gets identical numbers. Every table is locked to its owner with row-level security.
