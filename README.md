@@ -5,6 +5,7 @@ Replaces the old Google Sheets + Apps Script setup.
 
 - **Frontend:** React, TypeScript, Vite, React Router. Installable PWA.
 - **Backend:** Supabase (Postgres, Auth, row-level security). No server code.
+- **Notifications:** Web Push through a Supabase Edge Function and a daily pg_cron job.
 - **Hosting:** GitHub Pages, deployed by GitHub Actions on every push to `main`.
 - **Look and feel:** the `my-wardrobe` design system (iOS-style, monochrome, light and dark).
 
@@ -16,7 +17,7 @@ Replaces the old Google Sheets + Apps Script setup.
 | History | Search, filter by category or "To check", edit or delete |
 | + | Quick add: amount, description (autocomplete fills the category), date, category |
 | Subscriptions | Recurring payments: upcoming list, calendar, monthly commitment, alerts, trials, price history |
-| Settings | Categories, budgets and income, import from Google Sheets, CSV backup, sign out |
+| Settings | Notifications, categories, budgets and income, import from Google Sheets, CSV backup, sign out |
 
 ## Quick start
 

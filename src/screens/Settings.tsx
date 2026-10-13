@@ -90,6 +90,19 @@ export function Settings() {
         </div>
 
         <div className="group">
+          <div className="group-body">
+            <Link to="/settings/notifications" viewTransition className="row">
+              <span className="row-icon">
+                <Icon name="bell" size={18} />
+              </span>
+              <span className="row-label">Notifications</span>
+              <Icon name="chevron-right" size={18} />
+            </Link>
+          </div>
+          <div className="group-footer">Phone alerts before subscription charges.</div>
+        </div>
+
+        <div className="group">
           <div className="group-header">Data</div>
           <div className="group-body">
             <Link to="/settings/import" viewTransition className="row">
@@ -116,7 +129,7 @@ export function Settings() {
           </div>
         </div>
 
-        <p className="footnote">Expense Tracker v1.1.0</p>
+        <p className="footnote">Expense Tracker v1.2.0</p>
       </main>
     </Screen>
   );

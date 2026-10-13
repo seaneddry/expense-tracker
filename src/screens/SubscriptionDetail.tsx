@@ -204,7 +204,11 @@ export function SubscriptionDetail() {
             ))}
           </div>
           <div className="group-footer">
-            When a charge is this close, the item is flagged in the list and the Subscriptions tab shows a count.
+            When a charge is this close, the item is flagged in the list and the Subscriptions tab shows a count.{' '}
+            <Link to="/settings/notifications" viewTransition>
+              Phone notifications
+            </Link>{' '}
+            can alert you too.
           </div>
         </div>
 

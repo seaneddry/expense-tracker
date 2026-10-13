@@ -2,7 +2,7 @@
 
 Not built yet, in rough priority order.
 
-- Push notifications for subscription alerts (needs a scheduled Supabase function, web push keys and the app installed on the Home Screen)
+- A second reminder on the due day, and a choice of notification time
 - iPhone Calendar feed (subscribe once, due dates appear in the Calendar app)
 - Future-dated price changes ("goes up from 1 Dec")
 - Mark a charge as paid for a cycle, skip a cycle

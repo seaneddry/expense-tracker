@@ -63,6 +63,16 @@ A failed "typecheck" step with an orange warning is not a problem: the app still
 Open the web address in **Safari** on iPhone: **Share > Add to Home Screen**.
 On Android Chrome: menu **> Install app**.
 
+## 5b. Turn on phone notifications
+
+1. Open the app from the **Home Screen icon** (not from Safari).
+2. **Settings > Notifications > Turn on notifications**, then tap **Allow** on the iPhone prompt.
+3. Tap **Send a test notification**. It should arrive within a few seconds.
+4. Set an alert time on each subscription. You get one notification per charge, around 9:00 AM Malaysia time,
+   on the day its alert window opens.
+
+If the prompt never appears, check iPhone **Settings > Notifications > Expense Tracker** and make sure Allow Notifications is on.
+
 ## 6. Updating the app later
 
 Change files in the folder, then in GitHub Desktop write a summary, click **Commit to main**

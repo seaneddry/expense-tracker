@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0
+
+Phone push notifications for subscription alerts.
+
+- Settings > Notifications: turn on, send a test, turn off (per device)
+- One notification per charge, around 9:00 AM Malaysia time on the day its alert window opens
+- Free trials alert before they end so you can cancel; yearly renewals use their longer lead time
+- More than three items on the same day are combined into one summary notification
+- Tapping a notification opens that subscription
+- Built on Web Push: a Supabase Edge Function (`supabase/functions/push`), a daily pg_cron job and a service-worker handler
+
 ## 1.1.0
 
 New **Subscriptions** module for recurring payments, completely separate from the expense log.

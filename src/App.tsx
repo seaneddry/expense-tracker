@@ -9,6 +9,7 @@ import { Categories } from './screens/Categories';
 import { Budgets } from './screens/Budgets';
 import { Import } from './screens/Import';
 import { Login } from './screens/Login';
+import { Notifications } from './screens/Notifications';
 import { Subscriptions } from './screens/Subscriptions';
 import { SubscriptionDetail } from './screens/SubscriptionDetail';
 import { SubscriptionForm } from './screens/SubscriptionForm';
@@ -51,6 +52,7 @@ const router = createBrowserRouter(
             { path: '/settings', element: <Settings /> },
             { path: '/settings/categories', element: <Categories /> },
             { path: '/settings/budgets', element: <Budgets /> },
+            { path: '/settings/notifications', element: <Notifications /> },
             { path: '/settings/import', element: <Import /> },
           ],
         },
