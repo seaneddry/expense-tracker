@@ -73,6 +73,30 @@ On Android Chrome: menu **> Install app**.
 
 If the prompt never appears, check iPhone **Settings > Notifications > Expense Tracker** and make sure Allow Notifications is on.
 
+## 5c. Turn on Ask (optional)
+
+Ask lets you type a question like "How much have I spent on petrol this month?" and get an answer from your own
+transactions. It uses Google's free Gemini tier, which needs no card. One thing to know first: on the free tier Google
+may use what you send it to improve its products. Each question sends your question and the few transaction rows
+it needs (dates, descriptions, categories, amounts), never the whole table. Details are in [ASK.md](ASK.md). Skip this
+section if you would rather not.
+
+1. **Add the database functions.** In Supabase, open **SQL Editor > New query**. Open
+   `supabase/migrations/20261014000000_ask_expenses.sql` from the folder, copy everything into the editor and click **Run**.
+2. **Get a free Gemini key.** Go to **aistudio.google.com/apikey**, sign in with a Google account and click
+   **Create API key**. Copy it.
+3. **Save the key as a secret.** In Supabase, open **Edge Functions > Secrets** and add a secret named
+   `GEMINI_API_KEY` with the key as its value. Never paste the key into the repo or `.env.local`.
+4. **Deploy the function.** In Supabase, open **Edge Functions > Deploy a new function** and choose the in-browser editor.
+   Name it `ask-expenses`, replace the starter code with everything in `supabase/functions/ask-expenses/index.ts`
+   and deploy. Leave **Verify JWT** on.
+5. **Publish the app update.** In GitHub Desktop, write a summary, click **Commit to main** and **Push origin**
+   (same as section 6). Wait about 2 minutes.
+6. **Try it.** Open the app, tap the sparkle icon at the top right of any main screen, or the **Ask about your spending**
+   bar on Home, then tap a suggested question.
+
+If you see an error message, [ASK.md](ASK.md) lists what each one means.
+
 ## 6. Updating the app later
 
 Change files in the folder, then in GitHub Desktop write a summary, click **Commit to main**

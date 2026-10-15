@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { AskButton } from './AskButton';
 
 interface ScreenProps {
   title: string;
@@ -36,7 +37,10 @@ export function Screen({ title, sub, left, right, compact, className, children }
         <div className="navbar-row">
           <div className="navbar-side">{left}</div>
           <div className={`navbar-title ${solid || compact ? '' : 'is-hidden'}`}>{title}</div>
-          <div className="navbar-side navbar-side-end">{right}</div>
+          <div className="navbar-side navbar-side-end">
+            {right}
+            <AskButton />
+          </div>
         </div>
       </header>
       {!compact && (

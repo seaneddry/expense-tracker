@@ -78,3 +78,24 @@ GitHub Actions builds and deploys. Users get the update on next open (the PWA up
 - **See the cron job:** `select * from cron.job;` and past runs in `cron.job_run_details`.
 
 iPhone requirements: iOS 16.4 or newer, the app added to the Home Screen, and the permission prompt tapped from a button.
+
+## Ask (plain-English questions)
+
+- **Flow:** the app sends the question and the last few messages to the `ask-expenses` Edge Function with the
+  signed-in user's token. The function asks Google Gemini, which can only call four read-only tools: list
+  categories, sum spending, search transactions and budget status. The tools query the database as the user
+  (their token and the public key), so row-level security applies. The reply comes back as one or two sentences
+  plus up to eight transactions behind the number.
+- **Database:** `ask_sum_spending` and `ask_search_transactions` (migration `20261014000000_ask_expenses.sql`). Both are
+  `security invoker` and executable only by signed-in users. The budget tool reuses `category_breakdown`.
+- **Key:** `GEMINI_API_KEY` is an Edge Function secret. It never goes in the repo or the browser.
+- **Model:** `ASK_MODEL` (default `gemini-3.5-flash-lite`). `ASK_THINKING_LEVEL` is optional.
+- **API:** the function calls Google's Interactions API statelessly (`store: false`), sending the whole conversation
+  each time. If Google changes that API, the call is in `ask()` in `supabase/functions/ask-expenses/index.ts`.
+- **Client:** `src/components/AskProvider.tsx` keeps the chat in memory, `AskSheet.tsx` draws it, `AskButton.tsx` holds the
+  header icon and the Home bar, and `src/lib/askApi.ts` calls the function. The icon sits in `Screen`, so it shows on every
+  main screen and not on the full-screen forms.
+- **Redeploy the function** after editing it: Supabase dashboard, Edge Functions, `ask-expenses`, Code.
+- **Logs:** Edge Functions, `ask-expenses`, Logs shows Google's exact error if a request fails.
+- **Privacy:** on Google's free tier, prompts may be used to improve its products. Enabling billing on the Google
+  project moves it to the paid tier, where they are not.

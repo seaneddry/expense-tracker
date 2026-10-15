@@ -1,6 +1,7 @@
 import { Navigate, Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { useAuth } from './auth';
 import { TabBar } from './components/TabBar';
+import { AskProvider } from './components/AskProvider';
 import { Home } from './screens/Home';
 import { History } from './screens/History';
 import { TransactionForm } from './screens/TransactionForm';
@@ -29,10 +30,10 @@ function RequireAuth() {
 
 function Shell() {
   return (
-    <>
+    <AskProvider>
       <Outlet />
       <TabBar />
-    </>
+    </AskProvider>
   );
 }
 

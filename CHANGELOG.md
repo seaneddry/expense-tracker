@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0
+
+**Ask about your spending.** Type a question and get an answer from your own transactions.
+
+- Sparkle icon in the header of every main screen and an Ask bar at the top of Home, both opening the same chat
+- Answers such as "How much have I spent on petrol this month?", "My 5 biggest expenses this month" or "Am I over budget on any category?", with the transactions behind the number shown underneath
+- Follow-ups keep their context ("and last month?")
+- Runs on Google Gemini's free tier through a Supabase Edge Function (`supabase/functions/ask-expenses`); the key stays on the server
+- The assistant can only read: two new `security invoker` database functions, `ask_sum_spending` and `ask_search_transactions`, plus the existing budget breakdown
+- Setup is in docs/SETUP.md section 5c, and docs/ASK.md explains privacy, limits and troubleshooting
+
 ## 1.2.0
 
 Phone push notifications for subscription alerts.
