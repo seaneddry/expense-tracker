@@ -94,23 +94,27 @@ interface Due {
   item_id: string;
   name: string;
   kind: string;
-  amount: number;
+  // Null for card and PayLater reminders, which have no fixed amount.
+  amount: number | null;
   next_due: string;
   days_until: number;
   is_trial: boolean;
 }
 
 function messageFor(d: Due) {
+  const amount = d.amount === null ? null : rm(d.amount);
+  const on = dateLabel(d.next_due);
   if (d.is_trial) {
     return {
       title: `${d.name}: free trial ends ${when(d.days_until)}`,
-      body: `Cancel before ${dateLabel(d.next_due)} to avoid the ${rm(d.amount)} charge.`,
+      body: `Cancel before ${on} to avoid the ${amount ? amount + ' ' : ''}charge.`,
     };
   }
+  const body = amount ? `${amount} on ${on}.` : `Due on ${on}.`;
   if (d.kind === 'renewal') {
-    return { title: `${d.name} renews ${when(d.days_until)}`, body: `${rm(d.amount)} on ${dateLabel(d.next_due)}.` };
+    return { title: `${d.name} renews ${when(d.days_until)}`, body };
   }
-  return { title: `${d.name} is due ${when(d.days_until)}`, body: `${rm(d.amount)} on ${dateLabel(d.next_due)}.` };
+  return { title: `${d.name} is due ${when(d.days_until)}`, body };
 }
 
 async function runAlerts(cfg: Cfg) {
