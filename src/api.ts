@@ -220,7 +220,7 @@ import type {
 } from './types';
 
 const OVERVIEW_COLS =
-  'id,name,kind,amount,cycle,anchor_date,trial_ends_on,alert_days,category,payment_method,notes,url,status,ends_on,next_due,days_until,in_trial,yearly_cost,monthly_cost,alert_active';
+  'id,name,kind,amount,cycle,anchor_date,trial_ends_on,alert_days,category,payment_method,notes,url,status,ends_on,next_due,days_until,in_trial,yearly_cost,monthly_cost,alert_active,paid';
 const BUCKET = 'recurring-attachments';
 
 export async function listRecurring(): Promise<RecurringItem[]> {
@@ -259,7 +259,7 @@ export async function createRecurring(input: RecurringInput): Promise<string> {
 
 export async function updateRecurring(
   id: string,
-  patch: Partial<RecurringInput> & { status?: string; ends_on?: string | null },
+  patch: Partial<RecurringInput> & { status?: string; ends_on?: string | null; last_paid_due?: string | null },
 ): Promise<void> {
   const { error } = await supabase.from('recurring_items').update(patch).eq('id', id);
   fail(error);

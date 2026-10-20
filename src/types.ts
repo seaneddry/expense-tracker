@@ -68,7 +68,7 @@ export interface MonthTotal {
 }
 
 // ------------------------------------------------------- recurring payments
-export type RecurringKind = 'subscription' | 'bill' | 'renewal';
+export type RecurringKind = 'subscription' | 'bill' | 'renewal' | 'credit';
 export type RecurringCycle = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 export type RecurringStatus = 'active' | 'paused' | 'cancelled';
 
@@ -76,7 +76,7 @@ export interface RecurringItem {
   id: string;
   name: string;
   kind: RecurringKind;
-  amount: number;
+  amount: number | null;
   cycle: RecurringCycle;
   anchor_date: string;
   trial_ends_on: string | null;
@@ -93,12 +93,13 @@ export interface RecurringItem {
   yearly_cost: number;
   monthly_cost: number;
   alert_active: boolean;
+  paid: boolean;
 }
 
 export interface RecurringInput {
   name: string;
   kind: RecurringKind;
-  amount: number;
+  amount: number | null;
   cycle: RecurringCycle;
   anchor_date: string;
   trial_ends_on: string | null;
@@ -121,7 +122,7 @@ export interface RecurringDue {
   day: string;
   item_id: string;
   name: string;
-  amount: number;
+  amount: number | null;
   kind: RecurringKind;
   is_trial_end: boolean;
 }

@@ -100,4 +100,14 @@ export function inDays(n: number | null | undefined): string {
 
 export const CYCLE_LABEL = { weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', yearly: 'Yearly' } as const;
 export const CYCLE_UNIT = { weekly: 'a week', monthly: 'a month', quarterly: 'a quarter', yearly: 'a year' } as const;
-export const KIND_LABEL = { subscription: 'Subscription', bill: 'Bill', renewal: 'Renewal' } as const;
+/** Amount text for a recurring item. Card and PayLater items have no amount. */
+export function itemAmount(value: number | null | undefined): string {
+  return value === null || value === undefined ? 'Due' : rm(value);
+}
+
+export const KIND_LABEL = {
+  subscription: 'Subscription',
+  bill: 'Bill',
+  renewal: 'Renewal',
+  credit: 'Card / PayLater',
+} as const;
