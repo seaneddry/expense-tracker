@@ -44,13 +44,16 @@ export function SubscriptionForm() {
   const [error, setError] = useState<string | null>(null);
   const loaded = useRef(false);
 
+  // Card and PayLater items are due-date reminders: no fixed amount, no free trial.
+  const isCredit = kind === 'credit';
+
   useEffect(() => {
     const e = existing.data;
     if (e && !loaded.current) {
       loaded.current = true;
       setName(e.name);
       setKind(e.kind);
-      setAmount(String(e.amount));
+      setAmount(e.amount === null ? '' : String(e.amount));
       setCycle(e.cycle);
       setDate(e.trial_ends_on ?? e.anchor_date);
       setTrial(Boolean(e.trial_ends_on));
@@ -65,6 +68,7 @@ export function SubscriptionForm() {
 
   function pickKind(k: RecurringKind) {
     setKind(k);
+    if (k === 'credit') setTrial(false);
     if (k === 'renewal' && cycle === 'monthly') setCycle('yearly');
     if (!alertTouched) setAlertDays(k === 'renewal' ? 30 : 3);
   }
@@ -79,7 +83,7 @@ export function SubscriptionForm() {
   );
 
   const parsed = parseAmount(amount);
-  const valid = name.trim() !== '' && parsed !== null && parsed >= 0 && date !== '';
+  const valid = name.trim() !== '' && (isCredit || (parsed !== null && parsed >= 0)) && date !== '';
 
   function leave() {
     if (window.history.length > 1) navigate(-1);
@@ -87,16 +91,16 @@ export function SubscriptionForm() {
   }
 
   async function save() {
-    if (!valid || parsed === null) return;
+    if (!valid) return;
     setBusy(true);
     setError(null);
     const input = {
       name: name.trim(),
       kind,
-      amount: parsed,
+      amount: isCredit ? null : parsed,
       cycle,
       anchor_date: date,
-      trial_ends_on: trial ? date : null,
+      trial_ends_on: trial && !isCredit ? date : null,
       alert_days: alertDays,
       category: category.trim() || null,
       payment_method: method.trim() || null,
@@ -151,12 +155,19 @@ export function SubscriptionForm() {
               <div className="group-body">
                 <label className="row-input">
                   <span className="row-label">Name</span>
-                  <input placeholder="e.g. Netflix" autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} />
+                  <input
+                    placeholder={isCredit ? 'e.g. Shopee PayLater' : 'e.g. Netflix'}
+                    autoComplete="off"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
                 </label>
-                <label className="row-input">
-                  <span className="row-label">Amount</span>
-                  <input inputMode="decimal" placeholder="RM 0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
-                </label>
+                {!isCredit ? (
+                  <label className="row-input">
+                    <span className="row-label">Amount</span>
+                    <input inputMode="decimal" placeholder="RM 0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                  </label>
+                ) : null}
               </div>
             </div>
 
@@ -172,7 +183,7 @@ export function SubscriptionForm() {
             </div>
 
             <div className="group">
-              <div className="group-header">Charged</div>
+              <div className="group-header">{isCredit ? 'Due' : 'Charged'}</div>
               <div className="chips" role="group" aria-label="How often">
                 {(Object.keys(CYCLE_LABEL) as RecurringCycle[]).map((c) => (
                   <button key={c} className={`chip ${cycle === c ? 'chip-on' : ''}`} onClick={() => setCycle(c)}>
@@ -184,25 +195,29 @@ export function SubscriptionForm() {
 
             <div className="group">
               <div className="group-body">
-                <label className="row">
-                  <span className="row-label">
-                    Free trial
-                    <span className="row-sub">The first real charge is when the trial ends</span>
-                  </span>
-                  <span className="switch">
-                    <input type="checkbox" checked={trial} onChange={(e) => setTrial(e.target.checked)} />
-                    <span className="switch-track" />
-                  </span>
-                </label>
+                {!isCredit ? (
+                  <label className="row">
+                    <span className="row-label">
+                      Free trial
+                      <span className="row-sub">The first real charge is when the trial ends</span>
+                    </span>
+                    <span className="switch">
+                      <input type="checkbox" checked={trial} onChange={(e) => setTrial(e.target.checked)} />
+                      <span className="switch-track" />
+                    </span>
+                  </label>
+                ) : null}
                 <label className="row-input">
-                  <span className="row-label">{trial ? 'Trial ends' : 'Charged on'}</span>
+                  <span className="row-label">{isCredit ? 'Due on' : trial ? 'Trial ends' : 'Charged on'}</span>
                   <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                 </label>
               </div>
               <div className="group-footer">
-                {trial
-                  ? 'You will be reminded to cancel before this date. Trial items are not counted in your monthly commitment yet.'
-                  : 'Any date it was or will be charged. The next due date moves forward by itself every cycle.'}
+                {isCredit
+                  ? 'The next due date. The reminder moves forward by itself every cycle.'
+                  : trial
+                    ? 'You will be reminded to cancel before this date. Trial items are not counted in your monthly commitment yet.'
+                    : 'Any date it was or will be charged. The next due date moves forward by itself every cycle.'}
               </div>
             </div>
 

@@ -115,11 +115,16 @@ export function SubscriptionDetail() {
   }
 
   const linkOk = it.url ? /^https?:\/\//i.test(it.url) : false;
+  const nextDue = it.next_due;
 
   return (
     <Screen
       title={it.name}
-      sub={`${rm(it.amount)} ${CYCLE_UNIT[it.cycle]} · ${rm(it.yearly_cost)} a year`}
+      sub={
+        it.amount === null
+          ? CYCLE_LABEL[it.cycle]
+          : `${rm(it.amount)} ${CYCLE_UNIT[it.cycle]} · ${rm(it.yearly_cost)} a year`
+      }
       left={back}
       right={
         <Link to={`/subscriptions/${id}/edit`} viewTransition className="nav-button nav-button-strong">
@@ -142,7 +147,7 @@ export function SubscriptionDetail() {
           <div className="group-body">
             {it.status === 'active' && it.next_due ? (
               <div className="row">
-                <span className="row-label">Next charge</span>
+                <span className="row-label">{it.kind === 'credit' ? 'Next due' : 'Next charge'}</span>
                 <span className="row-value row-value-strong">
                   {shortDate(it.next_due)} · {inDays(it.days_until)}
                 </span>
@@ -156,6 +161,25 @@ export function SubscriptionDetail() {
                 </span>
               </div>
             )}
+            {it.status === 'active' && nextDue ? (
+              it.paid ? (
+                <button
+                  className="row row-center"
+                  disabled={busy}
+                  onClick={() => void run(() => updateRecurring(id, { last_paid_due: null }), 'Marked as unpaid')}
+                >
+                  Paid for {shortDate(nextDue)} · Undo
+                </button>
+              ) : (
+                <button
+                  className="row row-center"
+                  disabled={busy}
+                  onClick={() => void run(() => updateRecurring(id, { last_paid_due: nextDue }), 'Marked as paid')}
+                >
+                  Mark as paid
+                </button>
+              )
+            ) : null}
             <div className="row">
               <span className="row-label">Type</span>
               <span className="row-value">
@@ -174,10 +198,12 @@ export function SubscriptionDetail() {
                 <span className="row-value">{it.category}</span>
               </div>
             ) : null}
-            <div className="row">
-              <span className="row-label">Monthly equivalent</span>
-              <span className="row-value num">{rm(it.monthly_cost)}</span>
-            </div>
+            {it.amount !== null ? (
+              <div className="row">
+                <span className="row-label">Monthly equivalent</span>
+                <span className="row-value num">{rm(it.monthly_cost)}</span>
+              </div>
+            ) : null}
             {linkOk && it.url ? (
               <a className="row" href={it.url} target="_blank" rel="noopener noreferrer">
                 <span className="row-label">Open account page</span>
@@ -204,7 +230,8 @@ export function SubscriptionDetail() {
             ))}
           </div>
           <div className="group-footer">
-            When a charge is this close, the item is flagged in the list and the Subscriptions tab shows a count.{' '}
+            When a charge is this close, the item is flagged in the list and the Subscriptions tab shows a count.
+            Marking it as paid stops the alert for that date.{' '}
             <Link to="/settings/notifications" viewTransition>
               Phone notifications
             </Link>{' '}
@@ -212,26 +239,28 @@ export function SubscriptionDetail() {
           </div>
         </div>
 
-        <div className="group">
-          <div className="group-header">Price history</div>
-          {(history.data ?? []).length === 0 ? (
-            <div className="notice">No price changes yet. If you edit the amount, the change is recorded here.</div>
-          ) : (
-            <div className="group-body">
-              {(history.data ?? []).map((h) => (
-                <div className="row" key={h.id}>
-                  <span className="row-label">
-                    {longDate(h.changed_on)}
-                    <span className="row-sub">{h.new_amount > h.old_amount ? 'Price went up' : 'Price went down'}</span>
-                  </span>
-                  <span className="row-value row-value-strong num">
-                    {rm(h.old_amount)} → {rm(h.new_amount)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {it.amount !== null ? (
+          <div className="group">
+            <div className="group-header">Price history</div>
+            {(history.data ?? []).length === 0 ? (
+              <div className="notice">No price changes yet. If you edit the amount, the change is recorded here.</div>
+            ) : (
+              <div className="group-body">
+                {(history.data ?? []).map((h) => (
+                  <div className="row" key={h.id}>
+                    <span className="row-label">
+                      {longDate(h.changed_on)}
+                      <span className="row-sub">{h.new_amount > h.old_amount ? 'Price went up' : 'Price went down'}</span>
+                    </span>
+                    <span className="row-value row-value-strong num">
+                      {rm(h.old_amount)} → {rm(h.new_amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
 
         <div className="group">
           <div className="group-header">Attachments</div>

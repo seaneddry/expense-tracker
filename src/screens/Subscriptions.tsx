@@ -5,7 +5,18 @@ import { Icon } from '../components/Icon';
 import { Empty, ErrorNotice, Loading } from '../components/States';
 import { getRecurringCalendar, getRecurringSummary, listRecurring } from '../api';
 import { useQuery } from '../lib/useQuery';
-import { CYCLE_LABEL, addMonths, inDays, monthLabel, monthStart, rm, rmShort, shortDate, todayKL } from '../lib/format';
+import {
+  CYCLE_LABEL,
+  addMonths,
+  inDays,
+  itemAmount,
+  monthLabel,
+  monthStart,
+  rm,
+  rmShort,
+  shortDate,
+  todayKL,
+} from '../lib/format';
 import type { RecurringDue, RecurringItem } from '../types';
 
 type Tab = 'upcoming' | 'calendar' | 'all';
@@ -71,7 +82,11 @@ function Row({ item }: { item: RecurringItem }) {
       : CYCLE_LABEL[item.cycle];
 
   return (
-    <Link to={`/subscriptions/${item.id}`} viewTransition className={`sub-row ${item.status !== 'active' ? 'sub-row-faded' : ''}`}>
+    <Link
+      to={`/subscriptions/${item.id}`}
+      viewTransition
+      className={`sub-row ${item.status !== 'active' || item.paid ? 'sub-row-faded' : ''}`}
+    >
       <span className="sub-initial" aria-hidden="true">
         {item.name.charAt(0).toUpperCase()}
       </span>
@@ -80,6 +95,7 @@ function Row({ item }: { item: RecurringItem }) {
           <span>{item.name}</span>
           {item.in_trial ? <span className="badge badge-warn">Trial</span> : null}
           {item.kind === 'renewal' && !item.in_trial ? <span className="badge">Renewal</span> : null}
+          {item.status === 'active' && item.paid ? <span className="badge">Paid</span> : null}
           {item.status !== 'active' ? <span className="badge">{item.status === 'paused' ? 'Paused' : 'Cancelled'}</span> : null}
         </span>
         <span className={`sub-sub ${item.alert_active ? 'is-alert' : ''}`}>
@@ -88,7 +104,7 @@ function Row({ item }: { item: RecurringItem }) {
         </span>
       </span>
       <span className="sub-amount num">
-        {rm(item.amount)}
+        {itemAmount(item.amount)}
         {item.status === 'active' && item.days_until !== null ? <small>{inDays(item.days_until)}</small> : null}
       </span>
     </Link>
@@ -239,7 +255,7 @@ function CalendarView() {
                   </span>
                   <span className="sub-sub">{d.is_trial_end ? 'Cancel before this day to avoid the charge' : 'Charge due'}</span>
                 </span>
-                <span className="sub-amount num">{rm(d.amount)}</span>
+                <span className="sub-amount num">{itemAmount(d.amount)}</span>
               </Link>
             ))}
           </div>
@@ -281,14 +297,16 @@ function All({ items }: { items: RecurringItem[] }) {
                       {i.in_trial ? <span className="badge badge-warn">Trial</span> : null}
                     </span>
                     <span className="sub-sub">
-                      {rm(i.amount)} {CYCLE_LABEL[i.cycle].toLowerCase()}
+                      {i.amount === null ? 'Reminder' : rm(i.amount)} {CYCLE_LABEL[i.cycle].toLowerCase()}
                       {i.category ? ` · ${i.category}` : ''}
                     </span>
                   </span>
-                  <span className="sub-amount num">
-                    {rmShort(i.yearly_cost)}
-                    <small>a year</small>
-                  </span>
+                  {i.amount !== null ? (
+                    <span className="sub-amount num">
+                      {rmShort(i.yearly_cost)}
+                      <small>a year</small>
+                    </span>
+                  ) : null}
                 </Link>
               ))}
             </div>
