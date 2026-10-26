@@ -8,6 +8,8 @@ import { createTransaction, deleteTransaction, getTransaction, listCategories, l
 import { errorMessage, useBump, useQuery } from '../lib/useQuery';
 import { parseAmount, rm, todayKL } from '../lib/format';
 
+const REMARKS_MAX = 500;
+
 /** One screen for adding (/add) and editing (/edit/:id) an expense. */
 export function TransactionForm() {
   const { id } = useParams();
@@ -26,6 +28,7 @@ export function TransactionForm() {
   const [categoryId, setCategoryId] = useState('');
   const [categoryTouched, setCategoryTouched] = useState(false);
   const [needsReview, setNeedsReview] = useState(false);
+  const [remarks, setRemarks] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -43,6 +46,7 @@ export function TransactionForm() {
       setCategoryId(t.category_id);
       setCategoryTouched(true);
       setNeedsReview(t.needs_review);
+      setRemarks(t.remarks ?? '');
     }
   }, [existing.data]);
 
@@ -81,6 +85,7 @@ export function TransactionForm() {
       category_id: categoryId,
       amount: parsed,
       needs_review: needsReview,
+      remarks: remarks.trim() || null,
     };
     try {
       if (id) await updateTransaction(id, input);
@@ -177,6 +182,16 @@ export function TransactionForm() {
                 <label className="row-input">
                   <span className="row-label">Date</span>
                   <input type="date" value={date} max={todayKL()} onChange={(e) => setDate(e.target.value)} />
+                </label>
+                <label className="row-input row-input-multiline">
+                  <span className="row-label">Remarks</span>
+                  <textarea
+                    rows={2}
+                    maxLength={REMARKS_MAX}
+                    placeholder="Optional"
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                  />
                 </label>
               </div>
             </div>

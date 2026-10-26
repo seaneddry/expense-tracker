@@ -56,7 +56,7 @@ export function History() {
           <Icon name="search" size={18} />
           <input
             type="search"
-            placeholder="Search descriptions"
+            placeholder="Search descriptions and remarks"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             enterKeyHint="search"
@@ -126,6 +126,7 @@ export function History() {
                         </>
                       ) : null}
                     </span>
+                    {t.remarks ? <span className="tx-remarks">{t.remarks}</span> : null}
                   </div>
                   <span className="tx-amount num">{rm(t.amount)}</span>
                 </Link>

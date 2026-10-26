@@ -12,6 +12,8 @@ export interface Transaction {
   category_id: string;
   amount: number;
   needs_review: boolean;
+  /** Optional note typed in the web app. Null for Apple Pay / Shortcuts entries. */
+  remarks: string | null;
 }
 
 export interface Suggestion {

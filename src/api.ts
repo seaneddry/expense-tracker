@@ -37,12 +37,13 @@ export interface TxFilter {
 export async function listTransactions(f: TxFilter): Promise<Transaction[]> {
   let q = supabase
     .from('transactions')
-    .select('id,occurred_on,description,category_id,amount,needs_review')
+    .select('id,occurred_on,description,category_id,amount,needs_review,remarks')
     .order('occurred_on', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(f.limit);
-  const term = f.search.trim().replace(/[%,()]/g, ' ');
-  if (term) q = q.ilike('description', `%${term}%`);
+  // Strip characters that have meaning inside a PostgREST or() filter.
+  const term = f.search.trim().replace(/[%,()"\\*]/g, ' ').trim();
+  if (term) q = q.or(`description.ilike."%${term}%",remarks.ilike."%${term}%"`);
   if (f.categoryId) q = q.eq('category_id', f.categoryId);
   if (f.needsReview) q = q.eq('needs_review', true);
   const { data, error } = await q;
@@ -53,7 +54,7 @@ export async function listTransactions(f: TxFilter): Promise<Transaction[]> {
 export async function getTransaction(id: string): Promise<Transaction | null> {
   const { data, error } = await supabase
     .from('transactions')
-    .select('id,occurred_on,description,category_id,amount,needs_review')
+    .select('id,occurred_on,description,category_id,amount,needs_review,remarks')
     .eq('id', id)
     .maybeSingle();
   fail(error);
@@ -181,7 +182,7 @@ export async function exportAllTransactions(): Promise<(Transaction & { category
   for (let from = 0; ; from += page) {
     const { data, error } = await supabase
       .from('transactions')
-      .select('id,occurred_on,description,category_id,amount,needs_review')
+      .select('id,occurred_on,description,category_id,amount,needs_review,remarks')
       .order('occurred_on')
       .order('created_at')
       .range(from, from + page - 1);

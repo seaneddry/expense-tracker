@@ -1921,3 +1921,42 @@ body:has(.screen-form) .toast {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/* Multi-line input row (Remarks on the expense form). */
+.row-input-multiline {
+  align-items: flex-start;
+}
+
+.row-input-multiline > .row-label {
+  padding-top: 13px;
+}
+
+.row-input textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.35;
+  outline: none;
+  resize: none;
+  field-sizing: content;
+  max-height: 160px;
+}
+
+.row-input textarea::placeholder {
+  color: var(--ink-3);
+}
+
+/* Remarks line under an expense in History. */
+.tx-remarks {
+  font-size: 13px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

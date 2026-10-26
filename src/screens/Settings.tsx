@@ -23,7 +23,7 @@ export function Settings() {
       const rows = await exportAllTransactions();
       const csv = toCsv([
         ['Date', 'Description', 'Category', 'Amount', 'Remarks'],
-        ...rows.map((r) => [ddmmyyyy(r.occurred_on), r.description, r.category, r.amount.toFixed(2), r.needs_review ? 'To check' : '']),
+        ...rows.map((r) => [ddmmyyyy(r.occurred_on), r.description, r.category, r.amount.toFixed(2), [r.needs_review ? 'To check' : '', r.remarks ?? ''].filter(Boolean).join(' · ')]),
       ]);
       const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -129,7 +129,7 @@ export function Settings() {
           </div>
         </div>
 
-        <p className="footnote">Expense Tracker v1.2.0</p>
+        <p className="footnote">Expense Tracker v1.5.0</p>
       </main>
     </Screen>
   );

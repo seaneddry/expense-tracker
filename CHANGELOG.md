@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.0
+
+**Remarks on expenses.** An optional note when you add or edit an expense in the web app.
+
+- New Remarks field on the New expense / Edit expense screen (optional, up to 500 characters)
+- History shows the remark in grey under the expense, and the search box now looks in remarks too
+- "Ask about your expenses" also finds words in remarks
+- CSV export puts the remark in the Remarks column (after "To check" if the expense is flagged)
+- Apple Pay / Shortcuts entries are unchanged: they save with no remark, and you can add one later by editing
+- Database: new nullable `remarks` column on `transactions` (`supabase/migrations/20261026000000_transaction_remarks.sql`)
+
 ## 1.3.0
 
 **Ask about your spending.** Type a question and get an answer from your own transactions.
