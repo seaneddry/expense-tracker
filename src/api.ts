@@ -6,12 +6,12 @@ function fail(error: { message: string } | null): never | void {
 }
 
 // ---------------------------------------------------------------- categories
-/** Categories that always go to the end of every list, whatever their name. */
-const LAST_CATEGORIES = ['n/a'];
+/** Categories that always go to the end of every list, in this order. */
+const LAST_CATEGORIES = ['others', 'n/a'];
 
-/** A to Z (ignoring case), with N/A last. Used by Settings > Categories, New expense and History. */
+/** A to Z (ignoring case), then Others, then N/A. Used by Settings > Categories, New expense and History. */
 export function sortCategories<T extends { name: string }>(list: T[]): T[] {
-  const last = (c: T) => (LAST_CATEGORIES.includes(c.name.trim().toLowerCase()) ? 1 : 0);
+  const last = (c: T) => LAST_CATEGORIES.indexOf(c.name.trim().toLowerCase()) + 1;
   return [...list].sort(
     (a, b) => last(a) - last(b) || a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }),
   );

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1
+
+- Others now sits at the end of every category list, just before N/A
+
 ## 1.7.0
 
 - Categories are listed A to Z, with N/A always last, in Settings > Categories, on the New / Edit expense screen and in the History filter pills (one shared sort in `src/api.ts`, `sortCategories`)

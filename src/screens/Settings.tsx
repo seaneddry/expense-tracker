@@ -129,7 +129,7 @@ export function Settings() {
           </div>
         </div>
 
-        <p className="footnote">Expense Tracker v1.7.0</p>
+        <p className="footnote">Expense Tracker v1.7.1</p>
       </main>
     </Screen>
   );
