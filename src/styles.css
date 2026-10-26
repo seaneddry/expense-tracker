@@ -1960,3 +1960,31 @@ body:has(.screen-form) .toast {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Delete button on category rows, and the bold first line of an action sheet title. */
+.icon-button-danger {
+  color: var(--danger);
+  background: none;
+}
+
+.action-title-strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Keep three actions compact so category names have room on narrow phones. */
+.mrow-actions .button-small {
+  padding: 0 10px;
+}
+
+.mrow-actions .icon-button {
+  width: 36px;
+}
+
+.mrow-name {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}

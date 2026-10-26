@@ -20,6 +20,7 @@ const paths: Record<string, string> = {
   receipt: 'M6 3h12v18l-3-2-3 2-3-2-3 2V3ZM9 8h6M9 12h6',
   sparkle: 'M12 3 13.9 8.1 19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3ZM19 16l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2Z',
   'arrow-up': 'M12 19V5m0 0-6 6m6-6 6 6',
+  trash: 'M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3',
 };
 
 interface IconProps {

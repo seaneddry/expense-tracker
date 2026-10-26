@@ -4,7 +4,9 @@ import { Screen } from '../components/Screen';
 import { Icon } from '../components/Icon';
 import { ErrorNotice, Loading } from '../components/States';
 import { useToast } from '../components/Toast';
-import { addCategory, listCategories, updateCategory } from '../api';
+import { addCategory, deleteCategory, getCategoryUsage, listCategories, updateCategory } from '../api';
+import type { CategoryUsage } from '../api';
+import type { Category } from '../types';
 import { errorMessage, useBump, useQuery } from '../lib/useQuery';
 
 export function Categories() {
@@ -14,6 +16,8 @@ export function Categories() {
   const [name, setName] = useState('');
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+  const [checking, setChecking] = useState<string | null>(null);
+  const [pending, setPending] = useState<{ cat: Category; usage: CategoryUsage } | null>(null);
 
   const list = cats.data ?? [];
 
@@ -33,6 +37,32 @@ export function Categories() {
     const next = list.reduce((m, c) => Math.max(m, c.sort_order), 0) + 1;
     await run(() => addCategory(n, next), 'Category added');
     setName('');
+  }
+
+  /** Step 1 of deleting: look up whether any expense uses the category, then show the right sheet. */
+  async function askDelete(cat: Category) {
+    setChecking(cat.id);
+    try {
+      setPending({ cat, usage: await getCategoryUsage(cat.id) });
+    } catch (e) {
+      toast(errorMessage(e));
+    } finally {
+      setChecking(null);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!pending) return;
+    const { cat } = pending;
+    setPending(null);
+    await run(() => deleteCategory(cat.id), `Deleted ${cat.name}`);
+  }
+
+  async function hideInstead() {
+    if (!pending) return;
+    const { cat } = pending;
+    setPending(null);
+    await run(() => updateCategory(cat.id, { is_active: false }), `${cat.name} hidden`);
   }
 
   return (
@@ -109,6 +139,14 @@ export function Categories() {
                         >
                           {c.is_active ? 'Hide' : 'Show'}
                         </button>
+                        <button
+                          className="icon-button icon-button-danger"
+                          aria-label={`Delete ${c.name}`}
+                          disabled={checking !== null}
+                          onClick={() => void askDelete(c)}
+                        >
+                          <Icon name="trash" size={19} />
+                        </button>
                       </div>
                     </>
                   )}
@@ -116,11 +154,71 @@ export function Categories() {
               ))}
             </ul>
             <div className="group-footer">
-              Hidden categories stay on old expenses but no longer appear when you add a new one.
+              Hidden categories stay on old expenses but no longer appear when you add a new one. Only categories
+              with no expenses can be deleted.
             </div>
           </div>
         ) : null}
       </main>
+
+      {pending ? <DeleteSheet {...pending} onDelete={confirmDelete} onHide={hideInstead} onClose={() => setPending(null)} /> : null}
     </Screen>
+  );
+}
+
+interface DeleteSheetProps {
+  cat: Category;
+  usage: CategoryUsage;
+  onDelete: () => void;
+  onHide: () => void;
+  onClose: () => void;
+}
+
+/**
+ * The failsafe. A category used by any expense is never deleted: the sheet offers "Hide" instead,
+ * which keeps it on every past expense. Only an unused category gets a real Delete button.
+ */
+function DeleteSheet({ cat, usage, onDelete, onHide, onClose }: DeleteSheetProps) {
+  const used = usage.transactions > 0;
+  const n = usage.transactions;
+  const expenses = `${n.toLocaleString()} expense${n === 1 ? '' : 's'}`;
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="action-sheet" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        <div className="action-group">
+          {used ? (
+            <div className="action-title">
+              <strong className="action-title-strong">Can't delete “{cat.name}”</strong>
+              {expenses} use{n === 1 ? 's' : ''} this category, and deleting it would change them.
+              {cat.is_active
+                ? ' Hide it instead: past expenses keep it, and it won’t appear when you add new ones.'
+                : ' It’s already hidden, so it won’t appear when you add new ones.'}
+            </div>
+          ) : (
+            <div className="action-title">
+              <strong className="action-title-strong">Delete “{cat.name}”?</strong>
+              No expenses use this category.
+              {usage.budgets > 0 ? ' Its budget will be removed too, so your total budget will go down.' : ''} This
+              can’t be undone.
+            </div>
+          )}
+          {used ? (
+            cat.is_active ? (
+              <button className="action" onClick={onHide}>
+                Hide instead
+              </button>
+            ) : null
+          ) : (
+            <button className="action action-danger" onClick={onDelete}>
+              Delete category
+            </button>
+          )}
+        </div>
+        <button className="action action-cancel" onClick={onClose}>
+          {used && !cat.is_active ? 'OK' : 'Cancel'}
+        </button>
+      </div>
+    </div>
   );
 }

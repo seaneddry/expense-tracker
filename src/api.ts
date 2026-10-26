@@ -26,6 +26,36 @@ export async function updateCategory(id: string, patch: Partial<Pick<Category, '
   fail(error);
 }
 
+export interface CategoryUsage {
+  /** Expenses that use this category. If more than 0, the category can't be deleted. */
+  transactions: number;
+  /** Budget rows set for this category (removed along with it). */
+  budgets: number;
+}
+
+export async function getCategoryUsage(id: string): Promise<CategoryUsage> {
+  const [tx, bu] = await Promise.all([
+    supabase.from('transactions').select('id', { count: 'exact', head: true }).eq('category_id', id),
+    supabase.from('budgets').select('id', { count: 'exact', head: true }).eq('category_id', id).gt('amount', 0),
+  ]);
+  fail(tx.error);
+  fail(bu.error);
+  return { transactions: tx.count ?? 0, budgets: bu.count ?? 0 };
+}
+
+/**
+ * Deletes a category that no expense uses. The database also refuses to delete a category
+ * that still has expenses (foreign key "on delete restrict"), so expenses can never lose it,
+ * even if one was logged (e.g. by Apple Pay) between the check and the delete.
+ */
+export async function deleteCategory(id: string): Promise<void> {
+  const { error } = await supabase.from('categories').delete().eq('id', id);
+  if (error && (error as { code?: string }).code === '23503') {
+    throw new Error('An expense now uses this category, so it was not deleted. Hide it instead.');
+  }
+  fail(error);
+}
+
 // -------------------------------------------------------------- transactions
 export interface TxFilter {
   search: string;

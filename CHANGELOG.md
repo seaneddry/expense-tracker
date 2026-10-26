@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.0
+
+**Delete categories, safely.** Settings > Categories now has a delete (bin) button on each category.
+
+- A category that no expense uses can be deleted after a confirmation. If it had a budget, the popup warns that your total budget will go down
+- A category that any expense uses can't be deleted. The popup says how many expenses use it and offers "Hide instead", so past expenses keep their category
+- The database enforces the same rule, so even an expense logged by Apple Pay a moment before you tap Delete is protected
+- Hidden badge now sits under long category names so names no longer break mid-word
+
 ## 1.5.0
 
 **Remarks on expenses.** An optional note when you add or edit an expense in the web app.
