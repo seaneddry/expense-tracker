@@ -10,12 +10,58 @@ import type { Transaction } from '../types';
 
 const PAGE = 100;
 
+/**
+ * Remembers the chosen category and "To check" pill while the app is open, so opening an
+ * expense and coming back (or saving it) returns to the same filtered list.
+ */
+const FILTER_KEY = 'history.filters';
+
+interface StoredFilters {
+  categoryId: string | null;
+  needsReview: boolean;
+}
+
+function readFilters(): StoredFilters {
+  try {
+    const raw = window.sessionStorage.getItem(FILTER_KEY);
+    if (raw) {
+      const v = JSON.parse(raw) as Partial<StoredFilters>;
+      return { categoryId: typeof v.categoryId === 'string' ? v.categoryId : null, needsReview: v.needsReview === true };
+    }
+  } catch {
+    // Storage unavailable (e.g. private mode): start unfiltered.
+  }
+  return { categoryId: null, needsReview: false };
+}
+
+function storeFilters(f: StoredFilters) {
+  try {
+    window.sessionStorage.setItem(FILTER_KEY, JSON.stringify(f));
+  } catch {
+    // Storage unavailable: the filters just won't be remembered.
+  }
+}
+
 export function History() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [needsReview, setNeedsReview] = useState(params.get('review') === '1');
+  // The "To check" link on Home opens History with only that filter on.
+  const [initial] = useState<StoredFilters>(() =>
+    params.get('review') === '1' ? { categoryId: null, needsReview: true } : readFilters(),
+  );
+  const [categoryId, setCategoryId] = useState<string | null>(initial.categoryId);
+  const [needsReview, setNeedsReview] = useState(initial.needsReview);
+
+  useEffect(() => {
+    storeFilters({ categoryId, needsReview });
+  }, [categoryId, needsReview]);
+
+  // Drop ?review=1 once applied, so coming back from an expense uses the remembered filters instead.
+  useEffect(() => {
+    if (params.has('review')) setParams({}, { replace: true });
+  }, [params, setParams]);
+
   const [limit, setLimit] = useState(PAGE);
 
   useEffect(() => {
@@ -30,6 +76,11 @@ export function History() {
     () => listTransactions({ search: debounced, categoryId, needsReview, limit }),
     [debounced, categoryId, needsReview, limit],
   );
+
+  // Forget a remembered category that was since hidden or deleted.
+  useEffect(() => {
+    if (categoryId && cats.data && !cats.data.some((c) => c.id === categoryId && c.is_active)) setCategoryId(null);
+  }, [cats.data, categoryId]);
 
   const names = useMemo(() => new Map((cats.data ?? []).map((c) => [c.id, c.name])), [cats.data]);
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.0
+
+- Categories are listed A to Z, with N/A always last, in Settings > Categories, on the New / Edit expense screen and in the History filter pills (one shared sort in `src/api.ts`, `sortCategories`)
+- History remembers the category and "To check" filters while the app is open: open an expense and go back, or save it, and the same filtered list is shown. Tap "All" to clear. The "To check" link on Home still opens with only that filter on
+- A remembered category that has since been hidden or deleted is cleared automatically
+
 ## 1.6.0
 
 **Delete categories, safely.** Settings > Categories now has a delete (bin) button on each category.

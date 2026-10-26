@@ -6,14 +6,21 @@ function fail(error: { message: string } | null): never | void {
 }
 
 // ---------------------------------------------------------------- categories
+/** Categories that always go to the end of every list, whatever their name. */
+const LAST_CATEGORIES = ['n/a'];
+
+/** A to Z (ignoring case), with N/A last. Used by Settings > Categories, New expense and History. */
+export function sortCategories<T extends { name: string }>(list: T[]): T[] {
+  const last = (c: T) => (LAST_CATEGORIES.includes(c.name.trim().toLowerCase()) ? 1 : 0);
+  return [...list].sort(
+    (a, b) => last(a) - last(b) || a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }),
+  );
+}
+
 export async function listCategories(): Promise<Category[]> {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('id,name,sort_order,is_active')
-    .order('sort_order')
-    .order('name');
+  const { data, error } = await supabase.from('categories').select('id,name,sort_order,is_active');
   fail(error);
-  return (data ?? []) as Category[];
+  return sortCategories((data ?? []) as Category[]);
 }
 
 export async function addCategory(name: string, sortOrder: number): Promise<void> {
