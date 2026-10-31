@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.8.0
+
+**Garage look.** The app now uses the same "Liquid Glass" styling as the Garage app. Looks only: no data, database or feature changes.
+
+- New `src/glass.css` theme layer, loaded last in `src/main.tsx`: soft glow background, frosted glass cards, bigger rounded buttons, monochrome progress bars (over-budget stays red)
+- Bottom bar is now a floating glass capsule with Home, History, Subscriptions and Settings, plus a round + button beside it to add an expense. Still five items; the due-soon badge on Subscriptions is kept
+- Ask bar, Ask sheet, popups and the toast are frosted to match
+- Status bar and home-screen icon background colours updated to match (`index.html`, `vite.config.ts`)
+- To undo the look, delete the `import './glass.css'` line in `src/main.tsx` (and restore the old TabBar from git)
+
 ## 1.7.1
 
 - Others now sits at the end of every category list, just before N/A

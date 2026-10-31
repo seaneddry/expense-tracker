@@ -6,6 +6,7 @@ import { AuthProvider } from './auth';
 import { ToastProvider } from './components/Toast';
 import { DataProvider } from './lib/useQuery';
 import './styles.css';
+import './glass.css'; // Garage look: loaded last so it only re-skins
 
 registerSW({ immediate: true });
 
