@@ -4,7 +4,17 @@ import { Screen } from '../components/Screen';
 import { ConfirmSheet } from '../components/ConfirmSheet';
 import { ErrorNotice, Loading } from '../components/States';
 import { useToast } from '../components/Toast';
-import { createTransaction, deleteTransaction, getTransaction, listCategories, listSuggestions, updateTransaction } from '../api';
+import {
+  createFriend,
+  createTransaction,
+  deleteTransaction,
+  getTransaction,
+  listCategories,
+  listFriendBalances,
+  listSuggestions,
+  splitExpense,
+  updateTransaction,
+} from '../api';
 import { errorMessage, useBump, useQuery } from '../lib/useQuery';
 import { parseAmount, rm, todayKL } from '../lib/format';
 
@@ -34,6 +44,16 @@ export function TransactionForm() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
   const loaded = useRef(false);
+
+  // Split with friends (new expenses only). The amount above is then the whole bill.
+  const friends = useQuery(() => (editing ? Promise.resolve([]) : listFriendBalances()), [editing]);
+  const [split, setSplit] = useState(false);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [splitMode, setSplitMode] = useState<'equal' | 'custom'>('equal');
+  const [includeMe, setIncludeMe] = useState(true);
+  const [custom, setCustom] = useState<Record<string, string>>({});
+  const [newFriend, setNewFriend] = useState('');
+  const [addingFriend, setAddingFriend] = useState(false);
 
   // Fill the form once when editing.
   useEffect(() => {
@@ -68,7 +88,32 @@ export function TransactionForm() {
 
   const categories = (cats.data ?? []).filter((c) => c.is_active || c.id === categoryId);
   const parsed = parseAmount(amount);
-  const valid = parsed !== null && parsed > 0 && description.trim() !== '' && categoryId !== '' && date !== '';
+  const shares = useMemo(
+    () => (split ? splitShares(parsed ?? 0, picked, splitMode, includeMe, custom) : null),
+    [split, parsed, picked, splitMode, includeMe, custom],
+  );
+  const splitOk = !shares || (picked.length > 0 && shares.mine >= 0 && shares.friends.every((x) => x.amount > 0));
+  const valid = parsed !== null && parsed > 0 && description.trim() !== '' && categoryId !== '' && date !== '' && splitOk;
+
+  function togglePick(fid: string) {
+    setPicked((p) => (p.includes(fid) ? p.filter((x) => x !== fid) : [...p, fid]));
+  }
+
+  async function addFriendInline() {
+    const name = newFriend.trim();
+    if (!name) return;
+    setAddingFriend(true);
+    try {
+      const fid = await createFriend(name, null);
+      setNewFriend('');
+      setPicked((p) => [...p, fid]);
+      friends.reload();
+    } catch (e) {
+      toast(errorMessage(e));
+    } finally {
+      setAddingFriend(false);
+    }
+  }
 
   function leave(fallback: string) {
     if (window.history.length > 1) navigate(-1);
@@ -88,10 +133,18 @@ export function TransactionForm() {
       remarks: remarks.trim() || null,
     };
     try {
+      const name = categories.find((c) => c.id === categoryId)?.name ?? '';
+      if (!id && shares) {
+        await splitExpense(input, shares.mine, shares.friends);
+        bump();
+        const owed = shares.friends.reduce((a, x) => a + x.amount, 0);
+        toast(shares.mine > 0 ? `Added ${rm(shares.mine)} · ${name} · ${rm(owed)} to IOUs` : `${rm(owed)} added to IOUs`);
+        navigate('/', { replace: true, viewTransition: true });
+        return;
+      }
       if (id) await updateTransaction(id, input);
       else await createTransaction(input);
       bump();
-      const name = categories.find((c) => c.id === categoryId)?.name ?? '';
       toast(`${id ? 'Saved' : 'Added'} ${rm(parsed)} · ${name}`);
       navigate(id ? '/history' : '/', { replace: true, viewTransition: true });
     } catch (e) {
@@ -214,6 +267,118 @@ export function TransactionForm() {
               </div>
             </div>
 
+            {!editing ? (
+              <div className="group">
+                <div className="group-body">
+                  <label className="row">
+                    <span className="row-label">
+                      Split with friends
+                      <span className="row-sub">Your share is logged, the rest goes to IOUs</span>
+                    </span>
+                    <span className="switch">
+                      <input type="checkbox" checked={split} onChange={(e) => setSplit(e.target.checked)} />
+                      <span className="switch-track" />
+                    </span>
+                  </label>
+                </div>
+              </div>
+            ) : null}
+
+            {!editing && split ? (
+              <div className="group">
+                <div className="group-header">Who was it for?</div>
+                <div className="chips" role="group" aria-label="Friends">
+                  {(friends.data ?? []).map((f) => (
+                    <button key={f.id} className={`chip ${picked.includes(f.id) ? 'chip-on' : ''}`} onClick={() => togglePick(f.id)}>
+                      {f.name}
+                    </button>
+                  ))}
+                </div>
+                <div className="group-body">
+                  <div className="row-input split-new">
+                    <input
+                      placeholder="Add a new friend"
+                      maxLength={60}
+                      autoComplete="off"
+                      value={newFriend}
+                      onChange={(e) => setNewFriend(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          void addFriendInline();
+                        }
+                      }}
+                    />
+                    <button className="button button-secondary button-small" disabled={!newFriend.trim() || addingFriend} onClick={() => void addFriendInline()}>
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                {picked.length > 0 ? (
+                  <>
+                    <div className="segmented segmented-2" role="group" aria-label="How to split">
+                      <button aria-pressed={splitMode === 'equal'} onClick={() => setSplitMode('equal')}>
+                        Split equally
+                      </button>
+                      <button aria-pressed={splitMode === 'custom'} onClick={() => setSplitMode('custom')}>
+                        Custom amounts
+                      </button>
+                    </div>
+                    <div className="group-body">
+                      {splitMode === 'equal' ? (
+                        <label className="row">
+                          <span className="row-label">
+                            Include me
+                            <span className="row-sub">Off if you only paid for them</span>
+                          </span>
+                          <span className="switch">
+                            <input type="checkbox" checked={includeMe} onChange={(e) => setIncludeMe(e.target.checked)} />
+                            <span className="switch-track" />
+                          </span>
+                        </label>
+                      ) : null}
+                      {picked.map((fid) => {
+                        const f = (friends.data ?? []).find((x) => x.id === fid);
+                        const share = shares?.friends.find((x) => x.friend_id === fid)?.amount ?? 0;
+                        return splitMode === 'custom' ? (
+                          <label className="row-input" key={fid}>
+                            <span className="row-label">{f?.name ?? 'Friend'}</span>
+                            <input
+                              inputMode="decimal"
+                              placeholder="0.00"
+                              aria-label={`${f?.name ?? 'Friend'}'s share`}
+                              value={custom[fid] ?? ''}
+                              onChange={(e) => setCustom((c) => ({ ...c, [fid]: e.target.value }))}
+                            />
+                          </label>
+                        ) : (
+                          <div className="row" key={fid}>
+                            <span className="row-label">{f?.name ?? 'Friend'}</span>
+                            <span className="row-value num">{rm(share)}</span>
+                          </div>
+                        );
+                      })}
+                      <div className="row">
+                        <span className="row-label">
+                          <strong>Your share</strong>
+                          <span className="row-sub">Goes into your expenses</span>
+                        </span>
+                        <span className={`row-value row-value-strong num ${shares && shares.mine < 0 ? 'loan-owe' : ''}`}>
+                          {rm(shares?.mine ?? 0)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="group-footer">
+                      {shares && shares.mine < 0
+                        ? 'Friends’ shares add up to more than the bill.'
+                        : `Total bill ${rm(parsed ?? 0)}. ${rm((parsed ?? 0) - (shares?.mine ?? 0))} is added to IOUs.`}
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="group">
               <div className="group-body">
                 <label className="row">
@@ -237,7 +402,7 @@ export function TransactionForm() {
 
             <div className="sticky-save">
               <button className="button button-primary button-block" disabled={!valid || busy} onClick={save}>
-                {busy ? 'Saving…' : editing ? 'Save changes' : 'Add expense'}
+                {busy ? 'Saving…' : editing ? 'Save changes' : split ? 'Add and split' : 'Add expense'}
               </button>
             </div>
 
@@ -261,4 +426,32 @@ export function TransactionForm() {
       ) : null}
     </Screen>
   );
+}
+
+/**
+ * Works out each person's share in whole sen. Equal splits give any leftover sen to you
+ * (or to the first friend when you're not included), so shares always add up to the bill.
+ */
+function splitShares(
+  total: number,
+  picked: string[],
+  mode: 'equal' | 'custom',
+  includeMe: boolean,
+  custom: Record<string, string>,
+): { mine: number; friends: { friend_id: string; amount: number }[] } {
+  const totalSen = Math.round(total * 100);
+  if (picked.length === 0) return { mine: total, friends: [] };
+  if (mode === 'custom') {
+    const friends = picked.map((fid) => ({ friend_id: fid, amount: parseAmount(custom[fid] ?? '') ?? 0 }));
+    const used = friends.reduce((a, x) => a + Math.round(x.amount * 100), 0);
+    return { mine: (totalSen - used) / 100, friends };
+  }
+  const people = picked.length + (includeMe ? 1 : 0);
+  const each = Math.floor(totalSen / people);
+  const leftover = totalSen - each * people;
+  const friends = picked.map((fid, i) => ({
+    friend_id: fid,
+    amount: (each + (!includeMe && i === 0 ? leftover : 0)) / 100,
+  }));
+  return { mine: includeMe ? (each + leftover) / 100 : 0, friends };
 }

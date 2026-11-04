@@ -82,8 +82,8 @@ iPhone requirements: iOS 16.4 or newer, the app added to the Home Screen, and th
 ## Ask (plain-English questions)
 
 - **Flow:** the app sends the question and the last few messages to the `ask-expenses` Edge Function with the
-  signed-in user's token. The function asks Google Gemini, which can only call four read-only tools: list
-  categories, sum spending, search transactions and budget status. The tools query the database as the user
+  signed-in user's token. The function asks Google Gemini, which can only call five read-only tools: list
+  categories, sum spending, search transactions, budget status and friend balances (Friends & IOUs). The tools query the database as the user
   (their token and the public key), so row-level security applies. The reply comes back as one or two sentences
   plus up to eight transactions behind the number.
 - **Database:** `ask_sum_spending` and `ask_search_transactions` (migration `20261014000000_ask_expenses.sql`). Both are
@@ -99,3 +99,24 @@ iPhone requirements: iOS 16.4 or newer, the app added to the Home Screen, and th
 - **Logs:** Edge Functions, `ask-expenses`, Logs shows Google's exact error if a request fails.
 - **Privacy:** on Google's free tier, prompts may be used to improve its products. Enabling billing on the Google
   project moves it to the paid tier, where they are not.
+
+## Friends & IOUs
+
+- **Tables:** `loan_friends`, `loan_entries` (direction `lent` = you paid for them, `borrowed` = they paid for you) and
+  `loan_payments` (direction `received` = they paid you back, `paid` = you paid them back). Prefixed `loan_` because this
+  Supabase project also holds other apps' tables. Owner-only row level security, and entries/payments can only point at
+  your own friends.
+- **Balance:** the `loan_balances` view gives each friend's `net` = lent − borrowed − received + paid. More than 0 means
+  they owe you.
+- **Open items** are worked out in the app, not stored: `allocate()` in `src/lib/loans.ts`. Opposite directions cancel
+  out first, then repayments clear the oldest items. The Ask function has a copy (`openItems` in
+  `supabase/functions/ask-expenses/index.ts`). Change both together.
+- **Link to the expense log:** only two database functions write expenses, and only your own share:
+  `loan_split_expense` (Split with friends on the New expense screen) and `loan_add_borrowed` (a friend paid for you,
+  with "Also log as my expense" on). `linked_expense_id` is a plain column with no foreign key, so deleting an expense
+  never deletes an IOU and vice versa. Repayments never create expenses.
+- **Screens:** `Friends.tsx`, `FriendDetail.tsx`, `FriendForm.tsx`, `LoanEntryForm.tsx` (one form for all four kinds,
+  `/friends/:id/add/:kind`), the Home card `components/FriendsCard.tsx`, and the split section in `TransactionForm.tsx`.
+- **Not a tab:** the bottom bar stays at five items. Entry points are the Home card, Settings and the split switch.
+- **Remind:** a plain `wa.me` link. Malaysian numbers starting with 0 get 60 in front (`waNumber`). Nothing is sent by
+  the app itself, and it costs nothing.

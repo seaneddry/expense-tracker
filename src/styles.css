@@ -1988,3 +1988,56 @@ body:has(.screen-form) .toast {
   flex-wrap: wrap;
   row-gap: 2px;
 }
+
+/* ===================================================== Friends & IOUs */
+.loan-owed {
+  color: var(--good);
+}
+.loan-owe {
+  color: var(--danger);
+}
+.hero-amount.loan-owe {
+  color: var(--danger);
+}
+.loan-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.loan-actions .button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+}
+/* History and open items are buttons (tap to delete) that look like the list rows. */
+button.sub-row.loan-row {
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+}
+.sub-initial.loan-owed,
+.sub-initial.loan-owe {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.friends-card .row-label {
+  display: flex;
+  flex-direction: column;
+}
+.friends-card strong {
+  font-weight: 600;
+}
+.split-new {
+  gap: 10px;
+}
+.split-new input {
+  flex: 1;
+  text-align: left;
+}
+.segmented-2 {
+  grid-template-columns: repeat(2, 1fr);
+}

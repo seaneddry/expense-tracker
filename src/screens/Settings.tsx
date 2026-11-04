@@ -86,6 +86,13 @@ export function Settings() {
               <span className="row-label">Budgets and income</span>
               <Icon name="chevron-right" size={18} />
             </Link>
+            <Link to="/friends" viewTransition className="row">
+              <span className="row-icon">
+                <Icon name="users" size={18} />
+              </span>
+              <span className="row-label">Friends and IOUs</span>
+              <Icon name="chevron-right" size={18} />
+            </Link>
           </div>
         </div>
 
@@ -129,7 +136,7 @@ export function Settings() {
           </div>
         </div>
 
-        <p className="footnote">Expense Tracker v1.7.1</p>
+        <p className="footnote">Expense Tracker v1.9.0</p>
       </main>
     </Screen>
   );

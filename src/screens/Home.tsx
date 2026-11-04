@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Screen } from '../components/Screen';
 import { Icon } from '../components/Icon';
 import { AskBar } from '../components/AskButton';
+import { FriendsCard } from '../components/FriendsCard';
 import { Empty, ErrorNotice, Loading } from '../components/States';
 import { getCategoryBreakdown, getDailyTotals, getKpis } from '../api';
 import { useQuery } from '../lib/useQuery';
@@ -37,6 +38,7 @@ export function Home() {
     <Screen title="Home" sub={switcher}>
       <main className="page stack">
         <AskBar />
+        <FriendsCard />
         {error ? <ErrorNotice message={error} onRetry={() => { kpis.reload(); cats.reload(); days.reload(); }} /> : null}
         {!k && !error ? <Loading /> : null}
 

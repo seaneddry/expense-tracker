@@ -14,6 +14,10 @@ import { Notifications } from './screens/Notifications';
 import { Subscriptions } from './screens/Subscriptions';
 import { SubscriptionDetail } from './screens/SubscriptionDetail';
 import { SubscriptionForm } from './screens/SubscriptionForm';
+import { Friends } from './screens/Friends';
+import { FriendDetail } from './screens/FriendDetail';
+import { FriendForm } from './screens/FriendForm';
+import { LoanEntryForm } from './screens/LoanEntryForm';
 
 function RequireAuth() {
   const { session, loading } = useAuth();
@@ -55,12 +59,18 @@ const router = createBrowserRouter(
             { path: '/settings/budgets', element: <Budgets /> },
             { path: '/settings/notifications', element: <Notifications /> },
             { path: '/settings/import', element: <Import /> },
+            // Friends & IOUs: not a tab. Opened from Home, Settings or a split expense.
+            { path: '/friends', element: <Friends /> },
+            { path: '/friends/:id', element: <FriendDetail /> },
           ],
         },
         { path: '/add', element: <TransactionForm /> },
         { path: '/edit/:id', element: <TransactionForm /> },
         { path: '/subscriptions/new', element: <SubscriptionForm /> },
         { path: '/subscriptions/:id/edit', element: <SubscriptionForm /> },
+        { path: '/friends/new', element: <FriendForm /> },
+        { path: '/friends/:id/edit', element: <FriendForm /> },
+        { path: '/friends/:id/add/:kind', element: <LoanEntryForm /> },
         { path: '*', element: <Navigate to="/" replace /> },
       ],
     },

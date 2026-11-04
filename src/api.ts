@@ -366,3 +366,156 @@ export async function deleteAttachment(att: Attachment): Promise<void> {
   const { error } = await supabase.from('recurring_attachments').delete().eq('id', att.id);
   fail(error);
 }
+
+// ============================================================== friends & IOUs
+// A separate module. Its tables never change the expense log, except through the two
+// database functions below, which add your own share as a normal expense on purpose.
+import type { FriendBalance, LoanEntry, LoanPayment, PaymentDirection } from './types';
+
+function toBalance(r: Record<string, unknown>): FriendBalance {
+  return {
+    id: String(r.id),
+    name: String(r.name),
+    phone: (r.phone as string | null) ?? null,
+    lent: Number(r.lent ?? 0),
+    borrowed: Number(r.borrowed ?? 0),
+    received: Number(r.received ?? 0),
+    paid: Number(r.paid ?? 0),
+    net: Number(r.net ?? 0),
+    last_activity: (r.last_activity as string | null) ?? null,
+  };
+}
+
+function friendError(error: { message: string; code?: string } | null): void {
+  if (error?.code === '23505') throw new Error('You already have a friend with that name.');
+  fail(error);
+}
+
+export async function listFriendBalances(): Promise<FriendBalance[]> {
+  const { data, error } = await supabase.from('loan_balances').select('*').order('name');
+  fail(error);
+  return ((data ?? []) as Record<string, unknown>[]).map(toBalance);
+}
+
+export async function getFriendBalance(id: string): Promise<FriendBalance | null> {
+  const { data, error } = await supabase.from('loan_balances').select('*').eq('id', id).maybeSingle();
+  fail(error);
+  return data ? toBalance(data as Record<string, unknown>) : null;
+}
+
+export async function createFriend(name: string, phone: string | null): Promise<string> {
+  const { data, error } = await supabase
+    .from('loan_friends')
+    .insert({ name: name.trim(), phone: phone?.trim() || null })
+    .select('id')
+    .single();
+  friendError(error);
+  return (data as { id: string }).id;
+}
+
+export async function updateFriend(id: string, name: string, phone: string | null): Promise<void> {
+  const { error } = await supabase
+    .from('loan_friends')
+    .update({ name: name.trim(), phone: phone?.trim() || null })
+    .eq('id', id);
+  friendError(error);
+}
+
+/** Removes the friend and all their IOUs and repayments. Expenses already logged stay as they are. */
+export async function deleteFriend(id: string): Promise<void> {
+  const { error } = await supabase.from('loan_friends').delete().eq('id', id);
+  fail(error);
+}
+
+export async function listLoanEntries(friendId: string): Promise<LoanEntry[]> {
+  const { data, error } = await supabase
+    .from('loan_entries')
+    .select('id,friend_id,direction,description,occurred_on,amount,linked_expense_id,created_at')
+    .eq('friend_id', friendId)
+    .order('occurred_on')
+    .order('created_at');
+  fail(error);
+  return ((data ?? []) as LoanEntry[]).map((e) => ({ ...e, amount: Number(e.amount) }));
+}
+
+export async function listLoanPayments(friendId: string): Promise<LoanPayment[]> {
+  const { data, error } = await supabase
+    .from('loan_payments')
+    .select('id,friend_id,direction,amount,paid_on,note,created_at')
+    .eq('friend_id', friendId)
+    .order('paid_on')
+    .order('created_at');
+  fail(error);
+  return ((data ?? []) as LoanPayment[]).map((p) => ({ ...p, amount: Number(p.amount) }));
+}
+
+/** You paid for a friend. Only the IOU is recorded; nothing goes into the expense log. */
+export async function addLent(friendId: string, description: string, date: string, amount: number): Promise<void> {
+  const { error } = await supabase
+    .from('loan_entries')
+    .insert({ friend_id: friendId, direction: 'lent', description: description.trim(), occurred_on: date, amount });
+  fail(error);
+}
+
+/** A friend paid for you. With a category, your share is also logged as a normal expense. */
+export async function addBorrowed(
+  friendId: string,
+  description: string,
+  date: string,
+  amount: number,
+  categoryId: string | null,
+): Promise<void> {
+  const { error } = await supabase.rpc('loan_add_borrowed', {
+    p_friend_id: friendId,
+    p_description: description.trim(),
+    p_occurred_on: date,
+    p_amount: amount,
+    p_category_id: categoryId,
+    p_remarks: null,
+  });
+  fail(error);
+}
+
+export async function addPayment(
+  friendId: string,
+  direction: PaymentDirection,
+  amount: number,
+  date: string,
+  note: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from('loan_payments')
+    .insert({ friend_id: friendId, direction, amount, paid_on: date, note: note?.trim() || null });
+  fail(error);
+}
+
+export async function deleteLoanEntry(id: string): Promise<void> {
+  const { error } = await supabase.from('loan_entries').delete().eq('id', id);
+  fail(error);
+}
+
+export async function deleteLoanPayment(id: string): Promise<void> {
+  const { error } = await supabase.from('loan_payments').delete().eq('id', id);
+  fail(error);
+}
+
+/**
+ * Split a bill you paid: your share goes into the expense log as a normal expense (skipped if it
+ * is 0) and each friend's share becomes an IOU. One database call, so it is all or nothing.
+ */
+export async function splitExpense(
+  input: TxInput,
+  myShare: number,
+  shares: { friend_id: string; amount: number }[],
+): Promise<void> {
+  const { error } = await supabase.rpc('loan_split_expense', {
+    p_occurred_on: input.occurred_on,
+    p_description: input.description,
+    p_category_id: input.category_id,
+    p_my_share: myShare,
+    p_remarks: input.remarks,
+    p_needs_review: input.needs_review,
+    p_shares: shares,
+  });
+  fail(error);
+}

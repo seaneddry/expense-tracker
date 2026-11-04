@@ -9,7 +9,7 @@ Not built yet, in rough priority order.
 - Variable bills (electricity, water) with an estimate and actual amounts
 - Foreign-currency subscriptions with an RM estimate
 
-- Loan tracker (money lent, repaid, outstanding per person). Needs its own migration and a new tab.
+- Friends & IOUs: push nudge when an IOU is unpaid after X days
 - Recurring bills (rent, car loan) that create themselves each month
 - Offline queue: log an expense with no signal and sync later
 - Receipt photo attached to an expense (Supabase Storage)

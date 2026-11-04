@@ -11,6 +11,7 @@ const SUGGESTIONS = [
   'What were my 5 biggest expenses this month?',
   'Am I over budget on any category?',
   'How does this month compare with last month?',
+  'Who still owes me money?',
 ];
 
 function Bubble({ m }: { m: AskMessage }) {

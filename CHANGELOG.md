@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.0
+
+**Friends & IOUs.** Track money between you and friends, in both directions. Not a new tab: open it from the card under the Ask bar on Home, or Settings > Friends and IOUs.
+
+- **Split with friends** on the New expense screen: the amount is the whole bill, pick friends, split equally (with or without you) or type custom amounts. Your share is logged as a normal expense; the rest becomes IOUs. One database call, so it is all or nothing
+- **Friend page:** net balance ("Ali owes you RM65"), open items, history, "I paid for Ali", "Ali paid for me" (optionally also logs your share as an expense), record a repayment, Settle up, delete items
+- **Two-way:** items in opposite directions cancel out, and repayments clear the oldest items first
+- **Remind** opens WhatsApp with a pre-filled message listing what is owed (add the friend's phone number to open their chat directly)
+- **Ask** can answer "Who still owes me money?", "How much do I owe Mei?" and similar (new read-only tool, `get_friend_balances`)
+- Repayments never touch the expense log, so nothing is counted twice. The dashboard, History, budgets and subscriptions are unchanged
+- New migration `20261104000000_friends_iou_module.sql` (tables `loan_friends`, `loan_entries`, `loan_payments`, view `loan_balances`)
+
 ## 1.8.0
 
 **Garage look.** The app now uses the same "Liquid Glass" styling as the Garage app. Looks only: no data, database or feature changes.

@@ -143,3 +143,43 @@ export interface Attachment {
   content_type: string | null;
   size_bytes: number | null;
 }
+
+// ------------------------------------------------------------- friends & IOUs
+/** lent: you paid for the friend (they owe you). borrowed: the friend paid for you (you owe them). */
+export type LoanDirection = 'lent' | 'borrowed';
+/** received: the friend paid you back. paid: you paid the friend back. */
+export type PaymentDirection = 'received' | 'paid';
+
+export interface FriendBalance {
+  id: string;
+  name: string;
+  phone: string | null;
+  lent: number;
+  borrowed: number;
+  received: number;
+  paid: number;
+  /** More than 0: the friend owes you. Less than 0: you owe the friend. */
+  net: number;
+  last_activity: string | null;
+}
+
+export interface LoanEntry {
+  id: string;
+  friend_id: string;
+  direction: LoanDirection;
+  description: string;
+  occurred_on: string;
+  amount: number;
+  linked_expense_id: string | null;
+  created_at: string;
+}
+
+export interface LoanPayment {
+  id: string;
+  friend_id: string;
+  direction: PaymentDirection;
+  amount: number;
+  paid_on: string;
+  note: string | null;
+  created_at: string;
+}
