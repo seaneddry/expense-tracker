@@ -156,7 +156,7 @@ export function SubscriptionForm() {
                 <label className="row-input">
                   <span className="row-label">Name</span>
                   <input
-                    placeholder={isCredit ? 'e.g. Shopee PayLater' : 'e.g. Netflix'}
+                    placeholder={isCredit ? 'e.g. Credit card' : 'e.g. Netflix'}
                     autoComplete="off"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -252,7 +252,7 @@ export function SubscriptionForm() {
                 </datalist>
                 <label className="row-input">
                   <span className="row-label">Charged to</span>
-                  <input list="sub-methods" placeholder="e.g. Maybank Visa" autoComplete="off" value={method} onChange={(e) => setMethod(e.target.value)} />
+                  <input list="sub-methods" placeholder="e.g. Debit card" autoComplete="off" value={method} onChange={(e) => setMethod(e.target.value)} />
                 </label>
                 <datalist id="sub-methods">
                   {methods.map((c) => (

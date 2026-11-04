@@ -221,7 +221,7 @@ export function TransactionForm() {
                   <span className="row-label">What</span>
                   <input
                     list="description-options"
-                    placeholder="e.g. Nasi ayam"
+                    placeholder="e.g. Lunch"
                     autoComplete="off"
                     value={description}
                     onChange={(e) => onDescription(e.target.value)}

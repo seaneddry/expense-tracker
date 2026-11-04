@@ -89,7 +89,7 @@ export function FriendForm() {
                   <input
                     autoFocus={!editing}
                     maxLength={60}
-                    placeholder="e.g. Ali"
+                    placeholder="Friend's name"
                     autoComplete="off"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -101,7 +101,7 @@ export function FriendForm() {
                     type="tel"
                     inputMode="tel"
                     maxLength={30}
-                    placeholder="Optional, e.g. 012-345 6789"
+                    placeholder="Optional"
                     autoComplete="off"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}

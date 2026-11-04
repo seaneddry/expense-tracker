@@ -141,7 +141,7 @@ export function LoanEntryForm() {
                     <span className="row-label">What</span>
                     <input
                       maxLength={120}
-                      placeholder={kind === 'lent' ? 'e.g. Movie tickets' : 'e.g. Petrol'}
+                      placeholder={kind === 'lent' ? 'e.g. Movie tickets' : 'e.g. Taxi ride'}
                       autoComplete="off"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -157,7 +157,7 @@ export function LoanEntryForm() {
                     <span className="row-label">Note</span>
                     <input
                       maxLength={120}
-                      placeholder="Optional, e.g. DuitNow"
+                      placeholder="Optional"
                       autoComplete="off"
                       value={note}
                       onChange={(e) => setNote(e.target.value)}

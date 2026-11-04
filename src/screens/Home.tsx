@@ -45,7 +45,7 @@ export function Home() {
           <Empty
             icon="receipt"
             title="Nothing logged yet"
-            text={`No expenses in ${monthLabel(month)}. Add your first one, or import your old sheet from Settings.`}
+            text={`No expenses in ${monthLabel(month)}. Tap + to add your first one.`}
             action={
               <Link to="/add" className="button button-primary">
                 Add expense

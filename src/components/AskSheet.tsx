@@ -7,7 +7,7 @@ import { rm, shortDate } from '../lib/format';
 import '../ask.css';
 
 const SUGGESTIONS = [
-  'How much have I spent on petrol this month?',
+  'How much have I spent this month?',
   'What were my 5 biggest expenses this month?',
   'Am I over budget on any category?',
   'How does this month compare with last month?',
