@@ -171,6 +171,7 @@ export interface LoanEntry {
   occurred_on: string;
   amount: number;
   linked_expense_id: string | null;
+  note: string | null;
   created_at: string;
 }
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.2
+
+- **Edit friend items:** tap any item or repayment on a friend's page to change the amount, date, description or note, or to delete it. Editing an item never changes a linked expense in History
+- **Notes on IOU items:** items now have an optional note, like repayments (migration `20261104000200_loan_entry_notes.sql`)
+- **Totals on each friend's page:** what you paid for them, what they paid you back, and (when used) what they paid for you and what you paid them back
+
 ## 1.9.1
 
 - **Split an existing expense:** "Split with friends" is now on the Edit expense screen too. Saving lowers the expense to your share and creates the IOUs in one step (new database function `loan_split_existing`). If your share is RM0, the expense is removed from History

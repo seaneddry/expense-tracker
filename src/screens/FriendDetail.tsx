@@ -8,8 +8,6 @@ import { useToast } from '../components/Toast';
 import {
   addPayment,
   deleteFriend,
-  deleteLoanEntry,
-  deleteLoanPayment,
   getFriendBalance,
   listLoanEntries,
   listLoanPayments,
@@ -20,11 +18,7 @@ import type { ItemStatus } from '../lib/loans';
 import { rm, shortDate, todayKL } from '../lib/format';
 import type { LoanEntry, LoanPayment } from '../types';
 
-type Pending =
-  | { kind: 'settle' }
-  | { kind: 'delete-friend' }
-  | { kind: 'entry'; entry: LoanEntry }
-  | { kind: 'payment'; payment: LoanPayment };
+type Pending = { kind: 'settle' } | { kind: 'delete-friend' };
 
 export function FriendDetail() {
   const { id = '' } = useParams();
@@ -102,16 +96,7 @@ export function FriendDetail() {
         <section className="hero" aria-label="Balance">
           <div className="hero-label">{netLabel(first, net)}</div>
           <div className={`hero-amount num ${youOwe ? 'loan-owe' : ''}`}>{rm(Math.abs(net))}</div>
-          <div className="hero-sub">
-            {f.lent > 0 || f.borrowed > 0
-              ? [
-                  f.lent > 0 ? `You paid ${rm(f.lent)} for ${first}` : '',
-                  f.borrowed > 0 ? `${first} paid ${rm(f.borrowed)} for you` : '',
-                ]
-                  .filter(Boolean)
-                  .join(' · ')
-              : `Nothing recorded with ${first} yet`}
-          </div>
+          {f.lent === 0 && f.borrowed === 0 ? <div className="hero-sub">Nothing recorded with {first} yet</div> : null}
           {owesYou || youOwe ? (
             <div className="loan-actions">
               {owesYou ? (
@@ -160,12 +145,29 @@ export function FriendDetail() {
           ) : null}
         </div>
 
+        {f.lent > 0 || f.borrowed > 0 || f.received > 0 || f.paid > 0 ? (
+          <section className="group">
+            <div className="group-header">Totals</div>
+            <div className="group-body">
+              <TotalRow label={`You paid for ${first}`} amount={f.lent} />
+              <TotalRow label={`${first} paid you back`} amount={f.received} />
+              {f.borrowed > 0 || f.paid > 0 ? (
+                <>
+                  <TotalRow label={`${first} paid for you`} amount={f.borrowed} />
+                  <TotalRow label={`You paid ${first} back`} amount={f.paid} />
+                </>
+              ) : null}
+            </div>
+            <div className="group-footer">All time. The balance above is what's left after repayments{f.borrowed > 0 ? ' and after both sides cancel out' : ''}.</div>
+          </section>
+        ) : null}
+
         {open.length > 0 ? (
           <section className="group">
             <div className="group-header">Open</div>
             <div className="group-body">
               {open.map((s) => (
-                <EntryRow key={s.entry.id} s={s} name={first} onTap={() => setPending({ kind: 'entry', entry: s.entry })} />
+                <EntryRow key={s.entry.id} s={s} name={first} onTap={() => navigate(`/friends/${id}/item/${s.entry.id}`, { viewTransition: true })} />
               ))}
             </div>
           </section>
@@ -177,9 +179,9 @@ export function FriendDetail() {
             <div className="group-body">
               {history.map((h) =>
                 h.type === 'entry' ? (
-                  <EntryRow key={h.s.entry.id} s={h.s} name={first} faded onTap={() => setPending({ kind: 'entry', entry: h.s.entry })} />
+                  <EntryRow key={h.s.entry.id} s={h.s} name={first} faded onTap={() => navigate(`/friends/${id}/item/${h.s.entry.id}`, { viewTransition: true })} />
                 ) : (
-                  <button key={h.p.id} className="sub-row loan-row" onClick={() => setPending({ kind: 'payment', payment: h.p })}>
+                  <button key={h.p.id} className="sub-row loan-row" onClick={() => navigate(`/friends/${id}/repayment/${h.p.id}`, { viewTransition: true })}>
                     <span className="sub-initial" aria-hidden="true">
                       <Icon name="wallet" size={18} />
                     </span>
@@ -197,7 +199,7 @@ export function FriendDetail() {
                 ),
               )}
             </div>
-            <div className="group-footer">Tap an item to delete it. Repayments clear the oldest items first.</div>
+            <div className="group-footer">Tap an item to edit or delete it. Repayments clear the oldest items first.</div>
           </section>
         ) : null}
 
@@ -225,34 +227,6 @@ export function FriendDetail() {
               () => addPayment(id, owesYou ? 'received' : 'paid', Math.round(Math.abs(net) * 100) / 100, todayKL(), 'Settled up'),
               'Settled up',
             );
-          }}
-        />
-      ) : null}
-      {pending?.kind === 'entry' ? (
-        <ConfirmSheet
-          title={`Delete “${pending.entry.description}” (${rm(pending.entry.amount)})?${
-            pending.entry.linked_expense_id ? ' Your own share stays in your expenses; delete it from History if needed.' : ''
-          }`}
-          confirmLabel="Delete item"
-          danger
-          onCancel={() => setPending(null)}
-          onConfirm={() => {
-            const e = pending.entry;
-            setPending(null);
-            void run(() => deleteLoanEntry(e.id), 'Deleted');
-          }}
-        />
-      ) : null}
-      {pending?.kind === 'payment' ? (
-        <ConfirmSheet
-          title={`Delete this ${rm(pending.payment.amount)} repayment from ${shortDate(pending.payment.paid_on)}?`}
-          confirmLabel="Delete repayment"
-          danger
-          onCancel={() => setPending(null)}
-          onConfirm={() => {
-            const p = pending.payment;
-            setPending(null);
-            void run(() => deleteLoanPayment(p.id), 'Deleted');
           }}
         />
       ) : null}
@@ -292,6 +266,7 @@ function EntryRow({ s, name, faded, onTap }: { s: ItemStatus; name: string; fade
         <span className="sub-sub">
           {shortDate(e.occurred_on)} · {lent ? 'you paid' : `${name} paid`}
           {partly ? ` · ${rm(s.covered)} of ${rm(e.amount)} back` : ''}
+          {e.note ? ` · ${e.note}` : ''}
         </span>
       </span>
       <span className={`sub-amount num ${faded ? '' : lent ? 'loan-owed' : 'loan-owe'}`}>
@@ -299,5 +274,14 @@ function EntryRow({ s, name, faded, onTap }: { s: ItemStatus; name: string; fade
         {rm(faded ? e.amount : s.open)}
       </span>
     </button>
+  );
+}
+
+function TotalRow({ label, amount }: { label: string; amount: number }) {
+  return (
+    <div className="row">
+      <span className="row-label">{label}</span>
+      <span className="row-value num">{rm(amount)}</span>
+    </div>
   );
 }

@@ -71,6 +71,8 @@ const router = createBrowserRouter(
         { path: '/friends/new', element: <FriendForm /> },
         { path: '/friends/:id/edit', element: <FriendForm /> },
         { path: '/friends/:id/add/:kind', element: <LoanEntryForm /> },
+        { path: '/friends/:id/item/:entryId', element: <LoanEntryForm /> },
+        { path: '/friends/:id/repayment/:paymentId', element: <LoanEntryForm /> },
         { path: '*', element: <Navigate to="/" replace /> },
       ],
     },

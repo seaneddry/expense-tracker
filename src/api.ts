@@ -430,7 +430,7 @@ export async function deleteFriend(id: string): Promise<void> {
 export async function listLoanEntries(friendId: string): Promise<LoanEntry[]> {
   const { data, error } = await supabase
     .from('loan_entries')
-    .select('id,friend_id,direction,description,occurred_on,amount,linked_expense_id,created_at')
+    .select('id,friend_id,direction,description,occurred_on,amount,linked_expense_id,note,created_at')
     .eq('friend_id', friendId)
     .order('occurred_on')
     .order('created_at');
@@ -450,10 +450,21 @@ export async function listLoanPayments(friendId: string): Promise<LoanPayment[]>
 }
 
 /** You paid for a friend. Only the IOU is recorded; nothing goes into the expense log. */
-export async function addLent(friendId: string, description: string, date: string, amount: number): Promise<void> {
-  const { error } = await supabase
-    .from('loan_entries')
-    .insert({ friend_id: friendId, direction: 'lent', description: description.trim(), occurred_on: date, amount });
+export async function addLent(
+  friendId: string,
+  description: string,
+  date: string,
+  amount: number,
+  note: string | null = null,
+): Promise<void> {
+  const { error } = await supabase.from('loan_entries').insert({
+    friend_id: friendId,
+    direction: 'lent',
+    description: description.trim(),
+    occurred_on: date,
+    amount,
+    note: note?.trim() || null,
+  });
   fail(error);
 }
 
@@ -464,8 +475,10 @@ export async function addBorrowed(
   date: string,
   amount: number,
   categoryId: string | null,
+  note: string | null = null,
 ): Promise<void> {
   const { error } = await supabase.rpc('loan_add_borrowed', {
+    p_note: note?.trim() || null,
     p_friend_id: friendId,
     p_description: description.trim(),
     p_occurred_on: date,
@@ -553,5 +566,48 @@ export async function splitExistingExpense(
     p_needs_review: input.needs_review,
     p_shares: shares,
   });
+  fail(error);
+}
+
+export async function getLoanEntry(id: string): Promise<LoanEntry | null> {
+  const { data, error } = await supabase
+    .from('loan_entries')
+    .select('id,friend_id,direction,description,occurred_on,amount,linked_expense_id,note,created_at')
+    .eq('id', id)
+    .maybeSingle();
+  fail(error);
+  return data ? { ...(data as LoanEntry), amount: Number((data as LoanEntry).amount) } : null;
+}
+
+export async function getLoanPayment(id: string): Promise<LoanPayment | null> {
+  const { data, error } = await supabase
+    .from('loan_payments')
+    .select('id,friend_id,direction,amount,paid_on,note,created_at')
+    .eq('id', id)
+    .maybeSingle();
+  fail(error);
+  return data ? { ...(data as LoanPayment), amount: Number((data as LoanPayment).amount) } : null;
+}
+
+/** Edits an IOU item only. A linked expense in History is never changed from here. */
+export async function updateLoanEntry(
+  id: string,
+  fields: { description: string; occurred_on: string; amount: number; note: string | null },
+): Promise<void> {
+  const { error } = await supabase
+    .from('loan_entries')
+    .update({ ...fields, description: fields.description.trim(), note: fields.note?.trim() || null })
+    .eq('id', id);
+  fail(error);
+}
+
+export async function updateLoanPayment(
+  id: string,
+  fields: { paid_on: string; amount: number; note: string | null },
+): Promise<void> {
+  const { error } = await supabase
+    .from('loan_payments')
+    .update({ ...fields, note: fields.note?.trim() || null })
+    .eq('id', id);
   fail(error);
 }

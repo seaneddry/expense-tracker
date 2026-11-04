@@ -116,8 +116,9 @@ iPhone requirements: iOS 16.4 or newer, the app added to the Home Screen, and th
   Edit expense screen: lowers the expense to your share, or removes it if your share is 0, and refuses an expense that
   is already split) and `loan_add_borrowed` (a friend paid for you, with "Also log as my expense" on). `linked_expense_id` is a plain column with no foreign key, so deleting an expense
   never deletes an IOU and vice versa. Repayments never create expenses.
-- **Screens:** `Friends.tsx`, `FriendDetail.tsx`, `FriendForm.tsx`, `LoanEntryForm.tsx` (one form for all four kinds,
-  `/friends/:id/add/:kind`), the Home card `components/FriendsCard.tsx`, and the split section in `TransactionForm.tsx`.
+- **Screens:** `Friends.tsx`, `FriendDetail.tsx`, `FriendForm.tsx`, `LoanEntryForm.tsx` (one form for all four kinds:
+  adding at `/friends/:id/add/:kind`, editing at `/friends/:id/item/:entryId` and `/friends/:id/repayment/:paymentId`;
+  editing never touches a linked expense), the Home card `components/FriendsCard.tsx`, and the split section in `TransactionForm.tsx`.
 - **Not a tab:** the bottom bar stays at five items. Entry points are the Home card, Settings and the split switch.
 - **Remind:** a plain `wa.me` link. Malaysian numbers starting with 0 get 60 in front (`waNumber`). Nothing is sent by
   the app itself, and it costs nothing.
