@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Screen } from '../components/Screen';
+import { Icon } from '../components/Icon';
 import { ConfirmSheet } from '../components/ConfirmSheet';
 import { ErrorNotice, Loading } from '../components/States';
 import { useToast } from '../components/Toast';
@@ -12,6 +13,8 @@ import {
   listCategories,
   listFriendBalances,
   listSuggestions,
+  listSplitFriends,
+  splitExistingExpense,
   splitExpense,
   updateTransaction,
 } from '../api';
@@ -45,8 +48,11 @@ export function TransactionForm() {
   const amountRef = useRef<HTMLInputElement>(null);
   const loaded = useRef(false);
 
-  // Split with friends (new expenses only). The amount above is then the whole bill.
-  const friends = useQuery(() => (editing ? Promise.resolve([]) : listFriendBalances()), [editing]);
+  // Split with friends. The amount above is then the whole bill. When editing, an expense that is
+  // already split shows who it was split with instead of the switch (it can only be split once).
+  const friends = useQuery(listFriendBalances, []);
+  const splitWith = useQuery(() => (id ? listSplitFriends(id) : Promise.resolve([])), [id]);
+  const canSplit = !editing || (splitWith.data !== undefined && splitWith.data.length === 0);
   const [split, setSplit] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const [splitMode, setSplitMode] = useState<'equal' | 'custom'>('equal');
@@ -134,12 +140,14 @@ export function TransactionForm() {
     };
     try {
       const name = categories.find((c) => c.id === categoryId)?.name ?? '';
-      if (!id && shares) {
-        await splitExpense(input, shares.mine, shares.friends);
+      if (shares && canSplit) {
+        if (id) await splitExistingExpense(id, input, shares.mine, shares.friends);
+        else await splitExpense(input, shares.mine, shares.friends);
         bump();
         const owed = shares.friends.reduce((a, x) => a + x.amount, 0);
-        toast(shares.mine > 0 ? `Added ${rm(shares.mine)} · ${name} · ${rm(owed)} to IOUs` : `${rm(owed)} added to IOUs`);
-        navigate('/', { replace: true, viewTransition: true });
+        const verb = id ? 'Saved' : 'Added';
+        toast(shares.mine > 0 ? `${verb} ${rm(shares.mine)} · ${name} · ${rm(owed)} to IOUs` : `${rm(owed)} added to IOUs`);
+        navigate(id ? '/history' : '/', { replace: true, viewTransition: true });
         return;
       }
       if (id) await updateTransaction(id, input);
@@ -267,7 +275,24 @@ export function TransactionForm() {
               </div>
             </div>
 
-            {!editing ? (
+            {editing && splitWith.data && splitWith.data.length > 0 ? (
+              <div className="group">
+                <div className="group-body">
+                  <Link to="/friends" viewTransition className="row">
+                    <span className="row-icon">
+                      <Icon name="users" size={18} />
+                    </span>
+                    <span className="row-label">
+                      Split with {splitWith.data.join(', ')}
+                      <span className="row-sub">This amount is your share. Their shares are in Friends.</span>
+                    </span>
+                    <Icon name="chevron-right" size={18} />
+                  </Link>
+                </div>
+              </div>
+            ) : null}
+
+            {canSplit ? (
               <div className="group">
                 <div className="group-body">
                   <label className="row">
@@ -284,7 +309,7 @@ export function TransactionForm() {
               </div>
             ) : null}
 
-            {!editing && split ? (
+            {canSplit && split ? (
               <div className="group">
                 <div className="group-header">Who was it for?</div>
                 <div className="chips" role="group" aria-label="Friends">
@@ -372,7 +397,9 @@ export function TransactionForm() {
                     <div className="group-footer">
                       {shares && shares.mine < 0
                         ? 'Friends’ shares add up to more than the bill.'
-                        : `Total bill ${rm(parsed ?? 0)}. ${rm((parsed ?? 0) - (shares?.mine ?? 0))} is added to IOUs.`}
+                        : `Total bill ${rm(parsed ?? 0)}. ${rm((parsed ?? 0) - (shares?.mine ?? 0))} is added to IOUs.${
+                            editing && shares && shares.mine === 0 ? ' Your share is RM0, so this expense is removed from History.' : ''
+                          }`}
                     </div>
                   </>
                 ) : null}
@@ -402,7 +429,7 @@ export function TransactionForm() {
 
             <div className="sticky-save">
               <button className="button button-primary button-block" disabled={!valid || busy} onClick={save}>
-                {busy ? 'Saving…' : editing ? 'Save changes' : split ? 'Add and split' : 'Add expense'}
+                {busy ? 'Saving…' : split && canSplit ? (editing ? 'Save and split' : 'Add and split') : editing ? 'Save changes' : 'Add expense'}
               </button>
             </div>
 

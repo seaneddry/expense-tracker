@@ -111,9 +111,10 @@ iPhone requirements: iOS 16.4 or newer, the app added to the Home Screen, and th
 - **Open items** are worked out in the app, not stored: `allocate()` in `src/lib/loans.ts`. Opposite directions cancel
   out first, then repayments clear the oldest items. The Ask function has a copy (`openItems` in
   `supabase/functions/ask-expenses/index.ts`). Change both together.
-- **Link to the expense log:** only two database functions write expenses, and only your own share:
-  `loan_split_expense` (Split with friends on the New expense screen) and `loan_add_borrowed` (a friend paid for you,
-  with "Also log as my expense" on). `linked_expense_id` is a plain column with no foreign key, so deleting an expense
+- **Link to the expense log:** only three database functions write expenses, and only your own share:
+  `loan_split_expense` (Split with friends on the New expense screen), `loan_split_existing` (the same switch on the
+  Edit expense screen: lowers the expense to your share, or removes it if your share is 0, and refuses an expense that
+  is already split) and `loan_add_borrowed` (a friend paid for you, with "Also log as my expense" on). `linked_expense_id` is a plain column with no foreign key, so deleting an expense
   never deletes an IOU and vice versa. Repayments never create expenses.
 - **Screens:** `Friends.tsx`, `FriendDetail.tsx`, `FriendForm.tsx`, `LoanEntryForm.tsx` (one form for all four kinds,
   `/friends/:id/add/:kind`), the Home card `components/FriendsCard.tsx`, and the split section in `TransactionForm.tsx`.

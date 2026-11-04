@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.1
+
+- **Split an existing expense:** "Split with friends" is now on the Edit expense screen too. Saving lowers the expense to your share and creates the IOUs in one step (new database function `loan_split_existing`). If your share is RM0, the expense is removed from History
+- An expense can only be split once. Editing one that is already split shows who it was split with instead of the switch
+- Placeholders no longer use personal examples, so family members can use their own accounts
+
 ## 1.9.0
 
 **Friends & IOUs.** Track money between you and friends, in both directions. Not a new tab: open it from the card under the Ask bar on Home, or Settings > Friends and IOUs.

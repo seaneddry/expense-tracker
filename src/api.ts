@@ -519,3 +519,39 @@ export async function splitExpense(
   });
   fail(error);
 }
+
+/** Names of the friends an expense was split with (empty if it wasn't split). */
+export async function listSplitFriends(txId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('loan_entries')
+    .select('loan_friends(name)')
+    .eq('linked_expense_id', txId);
+  fail(error);
+  const names = ((data ?? []) as { loan_friends: { name: string } | { name: string }[] | null }[])
+    .flatMap((r) => (Array.isArray(r.loan_friends) ? r.loan_friends : r.loan_friends ? [r.loan_friends] : []))
+    .map((f) => f.name);
+  return [...new Set(names)];
+}
+
+/**
+ * Split an expense that is already logged: the expense is saved with the amount lowered to your
+ * share (or removed if your share is 0) and each friend's share becomes an IOU. All or nothing.
+ */
+export async function splitExistingExpense(
+  id: string,
+  input: TxInput,
+  myShare: number,
+  shares: { friend_id: string; amount: number }[],
+): Promise<void> {
+  const { error } = await supabase.rpc('loan_split_existing', {
+    p_tx_id: id,
+    p_occurred_on: input.occurred_on,
+    p_description: input.description,
+    p_category_id: input.category_id,
+    p_my_share: myShare,
+    p_remarks: input.remarks,
+    p_needs_review: input.needs_review,
+    p_shares: shares,
+  });
+  fail(error);
+}
