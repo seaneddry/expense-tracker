@@ -38,7 +38,6 @@ export function Home() {
     <Screen title="Home" sub={switcher}>
       <main className="page stack">
         <AskBar />
-        <FriendsCard />
         {error ? <ErrorNotice message={error} onRetry={() => { kpis.reload(); cats.reload(); days.reload(); }} /> : null}
         {!k && !error ? <Loading /> : null}
 
@@ -54,11 +53,14 @@ export function Home() {
             }
           />
         ) : null}
+        {/* In a month with no expenses there is no By category section, so the card sits under the empty state. */}
+        {k && k.transaction_count === 0 ? <FriendsCard /> : null}
 
         {k && k.transaction_count > 0 ? (
           <>
             <Hero k={k} />
             <Tiles k={k} />
+            <FriendsCard />
             {cats.data ? <Categories rows={cats.data} /> : null}
             {days.data ? <Heat days={days.data} month={month} /> : null}
           </>
