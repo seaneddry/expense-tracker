@@ -13,8 +13,8 @@ import {
   listCategories,
   listFriendBalances,
   listSuggestions,
-  listSplitFriends,
-  splitExistingExpense,
+  listSplitShares,
+  setExpenseSplit,
   splitExpense,
   updateTransaction,
 } from '../api';
@@ -48,11 +48,14 @@ export function TransactionForm() {
   const amountRef = useRef<HTMLInputElement>(null);
   const loaded = useRef(false);
 
-  // Split with friends. The amount above is then the whole bill. When editing, an expense that is
-  // already split shows who it was split with instead of the switch (it can only be split once).
+  // Split with friends. While it is on, the amount above is the whole bill. When editing a split
+  // expense, the split is loaded so friends and amounts can be changed or the split removed.
+  // An expense a friend paid for (a "borrowed" item) is edited from that friend's page instead.
   const friends = useQuery(listFriendBalances, []);
-  const splitWith = useQuery(() => (id ? listSplitFriends(id) : Promise.resolve([])), [id]);
-  const canSplit = !editing || (splitWith.data !== undefined && splitWith.data.length === 0);
+  const splitInfo = useQuery(() => (id ? listSplitShares(id) : Promise.resolve([])), [id]);
+  const borrowedFrom = (splitInfo.data ?? []).filter((x) => x.direction === 'borrowed').map((x) => x.name);
+  const wasSplit = (splitInfo.data ?? []).some((x) => x.direction === 'lent');
+  const canSplit = !editing || (splitInfo.data !== undefined && borrowedFrom.length === 0);
   const [split, setSplit] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const [splitMode, setSplitMode] = useState<'equal' | 'custom'>('equal');
@@ -61,12 +64,24 @@ export function TransactionForm() {
   const [newFriend, setNewFriend] = useState('');
   const [addingFriend, setAddingFriend] = useState(false);
 
-  // Fill the form once when editing.
+  // Fill the form once when editing. For a split expense the amount shown is the whole bill
+  // (your share plus friends' shares) and each friend's share fills the custom amounts.
   useEffect(() => {
     const t = existing.data;
-    if (t && !loaded.current) {
+    const parts = splitInfo.data;
+    if (t && parts && !loaded.current) {
       loaded.current = true;
-      setAmount(String(t.amount));
+      const lent = parts.filter((x) => x.direction === 'lent');
+      if (lent.length > 0) {
+        const total = Math.round((t.amount + lent.reduce((a, x) => a + x.amount, 0)) * 100) / 100;
+        setAmount(total.toFixed(2));
+        setSplit(true);
+        setSplitMode('custom');
+        setPicked(lent.map((x) => x.friend_id));
+        setCustom(Object.fromEntries(lent.map((x) => [x.friend_id, x.amount.toFixed(2)])));
+      } else {
+        setAmount(String(t.amount));
+      }
       setDescription(t.description);
       setDate(t.occurred_on);
       setCategoryId(t.category_id);
@@ -74,7 +89,7 @@ export function TransactionForm() {
       setNeedsReview(t.needs_review);
       setRemarks(t.remarks ?? '');
     }
-  }, [existing.data]);
+  }, [existing.data, splitInfo.data]);
 
   useEffect(() => {
     if (!editing) amountRef.current?.focus();
@@ -140,9 +155,22 @@ export function TransactionForm() {
     };
     try {
       const name = categories.find((c) => c.id === categoryId)?.name ?? '';
+      if (id && canSplit && (shares || wasSplit)) {
+        // Covers splitting, changing a split and removing one (no shares: the whole amount is yours).
+        await setExpenseSplit(id, input, shares ? shares.mine : parsed, shares ? shares.friends : []);
+        bump();
+        if (!shares) {
+          toast(`Saved ${rm(parsed)} · ${name} · split removed`);
+          navigate('/history', { replace: true, viewTransition: true });
+          return;
+        }
+        const owed = shares.friends.reduce((a, x) => a + x.amount, 0);
+        toast(shares.mine > 0 ? `Saved ${rm(shares.mine)} · ${name} · ${rm(owed)} to IOUs` : `${rm(owed)} added to IOUs`);
+        navigate('/history', { replace: true, viewTransition: true });
+        return;
+      }
       if (shares && canSplit) {
-        if (id) await splitExistingExpense(id, input, shares.mine, shares.friends);
-        else await splitExpense(input, shares.mine, shares.friends);
+        await splitExpense(input, shares.mine, shares.friends);
         bump();
         const owed = shares.friends.reduce((a, x) => a + x.amount, 0);
         const verb = id ? 'Saved' : 'Added';
@@ -214,6 +242,7 @@ export function TransactionForm() {
                 onChange={(e) => setAmount(e.target.value)}
               />
             </div>
+            {split && canSplit ? <p className="footnote">Whole bill. Your share is worked out below.</p> : null}
 
             {match && !amount ? (
               <div className="quick-amounts">
@@ -275,7 +304,7 @@ export function TransactionForm() {
               </div>
             </div>
 
-            {editing && splitWith.data && splitWith.data.length > 0 ? (
+            {editing && borrowedFrom.length > 0 ? (
               <div className="group">
                 <div className="group-body">
                   <Link to="/friends" viewTransition className="row">
@@ -283,8 +312,8 @@ export function TransactionForm() {
                       <Icon name="users" size={18} />
                     </span>
                     <span className="row-label">
-                      Split with {splitWith.data.join(', ')}
-                      <span className="row-sub">This amount is your share. Their shares are in Friends.</span>
+                      {borrowedFrom.join(', ')} paid for this
+                      <span className="row-sub">This amount is your share. Edit it from their page in Friends.</span>
                     </span>
                     <Icon name="chevron-right" size={18} />
                   </Link>
@@ -306,6 +335,11 @@ export function TransactionForm() {
                     </span>
                   </label>
                 </div>
+                {wasSplit && !split ? (
+                  <div className="group-footer">
+                    Saving removes this split. Friends' shares are taken out of Friends, and the full {rm(parsed ?? 0)} stays as your expense.
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
@@ -429,7 +463,7 @@ export function TransactionForm() {
 
             <div className="sticky-save">
               <button className="button button-primary button-block" disabled={!valid || busy} onClick={save}>
-                {busy ? 'Saving…' : split && canSplit ? (editing ? 'Save and split' : 'Add and split') : editing ? 'Save changes' : 'Add expense'}
+                {busy ? 'Saving…' : split && canSplit ? (editing ? (wasSplit ? 'Save changes' : 'Save and split') : 'Add and split') : editing ? 'Save changes' : 'Add expense'}
               </button>
             </div>
 

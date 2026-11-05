@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.3
+
+- **Edit a split:** opening a split expense now shows the whole bill with each friend's share filled in. Change amounts, add or remove friends, switch to an equal split, or turn the split off to make the full amount yours again. Saving updates the expense and Friends in one step (new database function `loan_set_split`, migration `20261105000000_edit_split.sql`)
+- Friends kept in a split keep their item and its note; repayments are never changed
+- An expense a friend paid for still shows "[name] paid for this" and is edited from their page
+
 ## 1.9.2
 
 - **Edit friend items:** tap any item or repayment on a friend's page to change the amount, date, description or note, or to delete it. Editing an item never changes a linked expense in History

@@ -533,17 +533,45 @@ export async function splitExpense(
   fail(error);
 }
 
-/** Names of the friends an expense was split with (empty if it wasn't split). */
-export async function listSplitFriends(txId: string): Promise<string[]> {
+/** The friends' shares linked to an expense (empty if it wasn't split or paid by a friend). */
+export async function listSplitShares(
+  txId: string,
+): Promise<{ friend_id: string; name: string; amount: number; direction: 'lent' | 'borrowed' }[]> {
   const { data, error } = await supabase
     .from('loan_entries')
-    .select('loan_friends(name)')
-    .eq('linked_expense_id', txId);
+    .select('friend_id,amount,direction,created_at,loan_friends(name)')
+    .eq('linked_expense_id', txId)
+    .order('created_at');
   fail(error);
-  const names = ((data ?? []) as { loan_friends: { name: string } | { name: string }[] | null }[])
-    .flatMap((r) => (Array.isArray(r.loan_friends) ? r.loan_friends : r.loan_friends ? [r.loan_friends] : []))
-    .map((f) => f.name);
-  return [...new Set(names)];
+  type R = { friend_id: string; amount: number; direction: 'lent' | 'borrowed'; loan_friends: { name: string } | { name: string }[] | null };
+  return ((data ?? []) as R[]).map((r) => {
+    const f = Array.isArray(r.loan_friends) ? r.loan_friends[0] : r.loan_friends;
+    return { friend_id: r.friend_id, name: f?.name ?? 'Friend', amount: Number(r.amount), direction: r.direction };
+  });
+}
+
+/**
+ * Set the split on an expense that is already logged: split it, change who it is split with and
+ * their amounts, or remove the split (empty shares). The expense amount becomes your share, or the
+ * expense is removed if your share is 0. All in one database call.
+ */
+export async function setExpenseSplit(
+  id: string,
+  input: TxInput,
+  myShare: number,
+  shares: { friend_id: string; amount: number }[],
+): Promise<void> {
+  const { error } = await supabase.rpc('loan_set_split', {
+    p_tx_id: id,
+    p_occurred_on: input.occurred_on,
+    p_description: input.description,
+    p_category_id: input.category_id,
+    p_my_share: myShare,
+    p_remarks: input.remarks,
+    p_needs_review: input.needs_review,
+    p_shares: shares,
+  });
+  fail(error);
 }
 
 /**
