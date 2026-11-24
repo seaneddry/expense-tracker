@@ -5,7 +5,6 @@
 - **Budget pace follows your habits:** the pace marker on Home no longer splits the budget evenly across the month. The rest of your spending follows your usual pattern, learned from the last 3 months. With less than 2 months of history it stays an even split
 - **Fixed bills on their due date:** new "Count in budget pace" switch on a subscription or bill (e.g. Car loan). The pace allows the full amount from its due date, or as soon as you log it if you pay early. Log the payment with the same name as the item
 - **Burn rate** and **Projected month end** use the same pace, so an early car loan payment no longer makes the month look over budget
-- A line under the pace bar says how the pace is worked out
 - Migration `20261124000000_budget_pace_habits.sql`: adds `recurring_items.count_in_pace` (off by default) and updates `dashboard_kpis`. Subscriptions and everything else on Home work as before
 
 ## 1.9.3
