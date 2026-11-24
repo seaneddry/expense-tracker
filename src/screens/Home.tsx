@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import type { CSSProperties } from 'react';
+import { Fragment, useState } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Screen } from '../components/Screen';
 import { Icon } from '../components/Icon';
 import { AskBar } from '../components/AskButton';
 import { FriendsCard } from '../components/FriendsCard';
 import { Empty, ErrorNotice, Loading } from '../components/States';
-import { getCategoryBreakdown, getDailyTotals, getKpis } from '../api';
+import { getCategoryBreakdown, getDailyTotals, getHomeCards, getKpis } from '../api';
+import { normaliseCards } from '../lib/homeCards';
+import type { HomeCardId, HomeCardPref } from '../lib/homeCards';
 import { useQuery } from '../lib/useQuery';
 import { addMonths, monthLabel, monthStart, pct, rm, rmShort, todayKL } from '../lib/format';
 import type { CategoryRow, DayTotal, Kpis } from '../types';
@@ -18,6 +20,8 @@ export function Home() {
   const kpis = useQuery(() => getKpis(month), [month]);
   const cats = useQuery(() => getCategoryBreakdown(month), [month]);
   const days = useQuery(() => getDailyTotals(month), [month]);
+  // Card layout from Settings > Home cards. Until it loads (or if it fails), show the default layout.
+  const cards = useQuery(getHomeCards, []);
 
   const switcher = (
     <div className="month-switch">
@@ -59,7 +63,7 @@ export function Home() {
         {k && k.transaction_count > 0 ? (
           <>
             <Hero k={k} />
-            <Tiles k={k} />
+            <Tiles k={k} cards={cards.data ?? normaliseCards(null)} />
             <FriendsCard />
             {cats.data ? <Categories rows={cats.data} /> : null}
             {days.data ? <Heat days={days.data} month={month} /> : null}
@@ -110,33 +114,48 @@ function Tile({ label, value, note, danger }: { label: string; value: string; no
   );
 }
 
-function Tiles({ k }: { k: Kpis }) {
+function Tiles({ k, cards }: { k: Kpis; cards: HomeCardPref[] }) {
   const projectedOver = k.total_budget > 0 && k.projected_month_end > k.total_budget;
-  return (
-    <div className="kpi-grid">
-      <Tile label="Average per day" value={rm(k.avg_per_day)} note={`over ${k.days_elapsed} days`} />
+  const render: Record<HomeCardId, () => ReactNode> = {
+    avg_day: () => <Tile label="Average per day" value={rm(k.avg_per_day)} note={`over ${k.days_elapsed} days`} />,
+    projected: () => (
       <Tile
         label="Projected month end"
         value={rm(k.projected_month_end)}
         note={k.total_budget > 0 ? `budget ${rmShort(k.total_budget)}` : undefined}
         danger={projectedOver}
       />
-      <Tile label="Burn rate" value={pct(k.burn_rate)} note="spent vs budget pace" danger={k.burn_rate > 1} />
-      <Tile label="Savings" value={rm(k.savings)} note={`${pct(k.savings_rate, 1)} of income`} danger={k.savings < 0} />
+    ),
+    burn_rate: () => <Tile label="Burn rate" value={pct(k.burn_rate)} note="spent vs budget pace" danger={k.burn_rate > 1} />,
+    savings: () => <Tile label="Savings" value={rm(k.savings)} note={`${pct(k.savings_rate, 1)} of income`} danger={k.savings < 0} />,
+    biggest_category: () => (
       <Tile label="Biggest category" value={k.biggest_category?.name ?? '-'} note={k.biggest_category ? rm(k.biggest_category.amount) : undefined} />
+    ),
+    biggest_transaction: () => (
       <Tile
         label="Biggest transaction"
         value={rm(k.biggest_transaction?.amount ?? 0)}
         note={k.biggest_transaction ? `${k.biggest_transaction.description} · ${pct(k.biggest_transaction_pct)}` : undefined}
       />
-      <Tile label="Weekdays" value={rm(k.weekday_total)} />
-      <Tile label="Weekends" value={rm(k.weekend_total)} />
-      <Tile label="Top 3 categories" value={pct(k.top3_pct, 1)} note="share of spending" />
-      <Tile label="No-spend days" value={String(k.no_spend_days)} note={`of ${k.days_elapsed} days`} />
+    ),
+    weekdays: () => <Tile label="Weekdays" value={rm(k.weekday_total)} />,
+    weekends: () => <Tile label="Weekends" value={rm(k.weekend_total)} />,
+    top3: () => <Tile label="Top 3 categories" value={pct(k.top3_pct, 1)} note="share of spending" />,
+    no_spend: () => <Tile label="No-spend days" value={String(k.no_spend_days)} note={`of ${k.days_elapsed} days`} />,
+    income_cover: () => (
       <Tile label="Income cover" value={`${k.income_cover_months.toFixed(2)} months`} note="income ÷ 3-month average spend" />
-      <Tile label="Transactions" value={String(k.transaction_count)} />
-      <Tile label="This year" value={rmShort(k.year_spent)} />
-      <Tile label="All time" value={rmShort(k.all_time_spent)} />
+    ),
+    transactions: () => <Tile label="Transactions" value={String(k.transaction_count)} />,
+    this_year: () => <Tile label="This year" value={rmShort(k.year_spent)} />,
+    all_time: () => <Tile label="All time" value={rmShort(k.all_time_spent)} />,
+  };
+  const shown = cards.filter((c) => c.visible);
+  if (shown.length === 0) return null;
+  return (
+    <div className="kpi-grid">
+      {shown.map((c) => (
+        <Fragment key={c.id}>{render[c.id]()}</Fragment>
+      ))}
     </div>
   );
 }

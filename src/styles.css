@@ -1328,6 +1328,20 @@ body:has(.screen-form) .toast {
   color: var(--ink-2);
 }
 
+/* Settings > Home cards */
+.card-pref {
+  gap: 4px;
+  padding-right: 12px;
+}
+
+.card-pref .switch {
+  margin-left: 8px;
+}
+
+.card-pref.is-off .row-label {
+  color: var(--ink-2);
+}
+
 /* KPI tiles */
 .kpi-grid {
   display: grid;

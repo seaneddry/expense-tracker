@@ -85,6 +85,13 @@ export function Settings() {
               <span className="row-label">Budgets and income</span>
               <Icon name="chevron-right" size={18} />
             </Link>
+            <Link to="/settings/home-cards" viewTransition className="row">
+              <span className="row-icon">
+                <Icon name="grid" size={18} />
+              </span>
+              <span className="row-label">Home cards</span>
+              <Icon name="chevron-right" size={18} />
+            </Link>
             <Link to="/friends" viewTransition className="row">
               <span className="row-icon">
                 <Icon name="users" size={18} />
@@ -135,7 +142,7 @@ export function Settings() {
           </div>
         </div>
 
-        <p className="footnote">Expense Tracker v1.10.0</p>
+        <p className="footnote">Expense Tracker v1.11.0</p>
       </main>
     </Screen>
   );

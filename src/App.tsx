@@ -8,6 +8,7 @@ import { TransactionForm } from './screens/TransactionForm';
 import { Settings } from './screens/Settings';
 import { Categories } from './screens/Categories';
 import { Budgets } from './screens/Budgets';
+import { HomeCards } from './screens/HomeCards';
 import { Import } from './screens/Import';
 import { Login } from './screens/Login';
 import { Notifications } from './screens/Notifications';
@@ -59,6 +60,7 @@ const router = createBrowserRouter(
             { path: '/settings/budgets', element: <Budgets /> },
             { path: '/settings/notifications', element: <Notifications /> },
             { path: '/settings/import', element: <Import /> },
+            { path: '/settings/home-cards', element: <HomeCards /> },
             // Friends & IOUs: not a tab. Opened from Home, Settings or a split expense.
             { path: '/friends', element: <Friends /> },
             { path: '/friends/:id', element: <FriendDetail /> },

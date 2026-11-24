@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.11.0
+
+- **Customise Home cards:** new Settings > Home cards. Show or hide each card in Home's grid (Average per day, Burn rate, Savings and the rest) and move them up or down to change the order. Changes save straight away and apply on every device you sign in on. "Reset to default" brings back the original layout
+- Each account has its own layout, so family members can set theirs
+- Migration `20261124000100_user_prefs_home_cards.sql`: new table `user_prefs` (one row per user). Without a saved layout Home looks exactly as before
+
 ## 1.10.0
 
 - **Budget pace follows your habits:** the pace marker on Home no longer splits the budget evenly across the month. The rest of your spending follows your usual pattern, learned from the last 3 months. With less than 2 months of history it stays an even split

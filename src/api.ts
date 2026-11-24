@@ -1,5 +1,7 @@
 import { supabase } from './supabase';
 import type { Category, CategoryRow, DayTotal, Kpis, MonthTotal, Suggestion, Transaction } from './types';
+import { normaliseCards } from './lib/homeCards';
+import type { HomeCardPref } from './lib/homeCards';
 
 function fail(error: { message: string } | null): never | void {
   if (error) throw new Error(error.message);
@@ -641,5 +643,22 @@ export async function updateLoanPayment(
     .from('loan_payments')
     .update({ ...fields, note: fields.note?.trim() || null })
     .eq('id', id);
+  fail(error);
+}
+
+// ============================================================ preferences
+/** Home cards in the saved order, with hidden ones marked. Falls back to the default layout. */
+export async function getHomeCards(): Promise<HomeCardPref[]> {
+  const { data, error } = await supabase.from('user_prefs').select('home_cards').maybeSingle();
+  fail(error);
+  return normaliseCards(data?.home_cards);
+}
+
+/** Saves the Home card layout. Pass null to go back to the default. */
+export async function saveHomeCards(cards: HomeCardPref[] | null): Promise<void> {
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id;
+  if (!userId) throw new Error('Not signed in');
+  const { error } = await supabase.from('user_prefs').upsert({ user_id: userId, home_cards: cards }, { onConflict: 'user_id' });
   fail(error);
 }
