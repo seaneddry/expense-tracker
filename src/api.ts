@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import type { Category, CategoryRow, DayTotal, Kpis, MonthTotal, Suggestion, Transaction } from './types';
-import { normaliseCards } from './lib/homeCards';
-import type { HomeCardPref } from './lib/homeCards';
+import { normaliseCards, normaliseCategoryView } from './lib/homeCards';
+import type { CategoryView, HomeCardPref, HomePrefs } from './lib/homeCards';
 
 function fail(error: { message: string } | null): never | void {
   if (error) throw new Error(error.message);
@@ -647,18 +647,28 @@ export async function updateLoanPayment(
 }
 
 // ============================================================ preferences
-/** Home cards in the saved order, with hidden ones marked. Falls back to the default layout. */
-export async function getHomeCards(): Promise<HomeCardPref[]> {
-  const { data, error } = await supabase.from('user_prefs').select('home_cards').maybeSingle();
+/** Home layout: card order and visibility, and the By category view. Falls back to the defaults. */
+export async function getHomePrefs(): Promise<HomePrefs> {
+  const { data, error } = await supabase.from('user_prefs').select('home_cards,category_view').maybeSingle();
   fail(error);
-  return normaliseCards(data?.home_cards);
+  return { cards: normaliseCards(data?.home_cards), categoryView: normaliseCategoryView(data?.category_view) };
 }
 
-/** Saves the Home card layout. Pass null to go back to the default. */
-export async function saveHomeCards(cards: HomeCardPref[] | null): Promise<void> {
+async function savePrefs(patch: { home_cards?: HomeCardPref[] | null; category_view?: CategoryView | null }): Promise<void> {
   const { data: auth } = await supabase.auth.getUser();
   const userId = auth.user?.id;
   if (!userId) throw new Error('Not signed in');
-  const { error } = await supabase.from('user_prefs').upsert({ user_id: userId, home_cards: cards }, { onConflict: 'user_id' });
+  // Upsert only sends the columns in the patch, so saving one setting never resets the other.
+  const { error } = await supabase.from('user_prefs').upsert({ user_id: userId, ...patch }, { onConflict: 'user_id' });
   fail(error);
+}
+
+/** Saves the Home card layout. Pass null to go back to the default. */
+export function saveHomeCards(cards: HomeCardPref[] | null): Promise<void> {
+  return savePrefs({ home_cards: cards });
+}
+
+/** Saves how the By category section is drawn. */
+export function saveCategoryView(view: CategoryView): Promise<void> {
+  return savePrefs({ category_view: view });
 }

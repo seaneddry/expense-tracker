@@ -48,3 +48,21 @@ export function normaliseCards(saved: unknown): HomeCardPref[] {
   for (const c of HOME_CARDS) if (!seen.has(c.id)) out.push({ id: c.id, visible: true });
   return out;
 }
+
+/** How Home's "By category" section is drawn. */
+export type CategoryView = 'attention' | 'rings' | 'allocation';
+
+export const CATEGORY_VIEWS: { id: CategoryView; label: string }[] = [
+  { id: 'attention', label: 'Needs attention' },
+  { id: 'rings', label: 'Rings' },
+  { id: 'allocation', label: 'One bar' },
+];
+
+export function normaliseCategoryView(saved: unknown): CategoryView {
+  return saved === 'rings' || saved === 'allocation' ? saved : 'attention';
+}
+
+export interface HomePrefs {
+  cards: HomeCardPref[];
+  categoryView: CategoryView;
+}

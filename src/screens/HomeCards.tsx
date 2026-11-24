@@ -4,22 +4,38 @@ import { Screen } from '../components/Screen';
 import { Icon } from '../components/Icon';
 import { ErrorNotice, Loading } from '../components/States';
 import { useToast } from '../components/Toast';
-import { getHomeCards, saveHomeCards } from '../api';
-import { cardLabel, normaliseCards } from '../lib/homeCards';
-import type { HomeCardPref } from '../lib/homeCards';
+import { getHomePrefs, saveCategoryView, saveHomeCards } from '../api';
+import { CATEGORY_VIEWS, cardLabel, normaliseCards } from '../lib/homeCards';
+import type { CategoryView, HomeCardPref } from '../lib/homeCards';
 import { errorMessage, useBump, useQuery } from '../lib/useQuery';
 
-/** Settings > Home cards: show, hide and reorder the cards in Home's grid. Saves on every change. */
+/** Settings > Home layout: pick the By category view, and show, hide and reorder Home's cards. Saves on every change. */
 export function HomeCards() {
   const toast = useToast();
   const bump = useBump();
-  const saved = useQuery(getHomeCards, []);
+  const saved = useQuery(getHomePrefs, []);
   const [cards, setCards] = useState<HomeCardPref[] | null>(null);
+  const [view, setView] = useState<CategoryView | null>(null);
 
   // Take the saved layout once; after that the screen keeps its own copy so taps feel instant.
   useEffect(() => {
-    if (saved.data && cards === null) setCards(saved.data);
+    if (saved.data && cards === null) {
+      setCards(saved.data.cards);
+      setView(saved.data.categoryView);
+    }
   }, [saved.data, cards]);
+
+  async function pickView(next: CategoryView) {
+    const before = view;
+    setView(next);
+    try {
+      await saveCategoryView(next);
+      bump();
+    } catch (e) {
+      setView(before);
+      toast(errorMessage(e));
+    }
+  }
 
   async function persist(next: HomeCardPref[] | null, done?: string) {
     const before = cards;
@@ -52,7 +68,7 @@ export function HomeCards() {
 
   return (
     <Screen
-      title="Home cards"
+      title="Home layout"
       left={
         <Link to="/settings" viewTransition className="nav-button">
           <Icon name="chevron-left" size={22} /> Settings
@@ -66,8 +82,19 @@ export function HomeCards() {
         {cards ? (
           <>
             <div className="group">
+              <div className="group-header">By category view</div>
+              <div className="chips" role="group" aria-label="By category view">
+                {CATEGORY_VIEWS.map((v) => (
+                  <button key={v.id} className={`chip ${view === v.id ? 'chip-on' : ''}`} onClick={() => void pickView(v.id)}>
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="group">
               <div className="group-header">
-                {shown} of {cards.length} shown
+                Cards · {shown} of {cards.length} shown
               </div>
               <div className="group-body">
                 {cards.map((c, i) => (
@@ -95,8 +122,8 @@ export function HomeCards() {
 
             <div className="group">
               <div className="group-body">
-                <button className="row row-center" onClick={() => void persist(null, 'Back to the default layout')}>
-                  Reset to default
+                <button className="row row-center" onClick={() => void persist(null, 'Cards back to the default layout')}>
+                  Reset cards to default
                 </button>
               </div>
             </div>

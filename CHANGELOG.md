@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.12.0
+
+- **Cleaner By category on Home:** shows how much of the budget is used, then only the categories that need a look (over budget, or 80% used or more) with "RM353 over" or "RM26 left". "Show all" opens a compact list of every category, most used first, one line each
+- Categories with no budget no longer show in red as "over". They're listed on one line as "No budget: Healthcare RM49, Others RM28"
+- **Pick the view in Settings > Home layout** (renamed from Home cards): Needs attention (default), Rings (2 per row, ring shows % used) or One bar (one bar for the whole budget with the biggest categories, Other and Unused)
+- Migration `20261124000200_user_prefs_category_view.sql`: adds `user_prefs.category_view`
+
 ## 1.11.0
 
 - **Customise Home cards:** new Settings > Home cards. Show or hide each card in Home's grid (Average per day, Burn rate, Savings and the rest) and move them up or down to change the order. Changes save straight away and apply on every device you sign in on. "Reset to default" brings back the original layout

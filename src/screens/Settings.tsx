@@ -89,7 +89,7 @@ export function Settings() {
               <span className="row-icon">
                 <Icon name="grid" size={18} />
               </span>
-              <span className="row-label">Home cards</span>
+              <span className="row-label">Home layout</span>
               <Icon name="chevron-right" size={18} />
             </Link>
             <Link to="/friends" viewTransition className="row">
@@ -142,7 +142,7 @@ export function Settings() {
           </div>
         </div>
 
-        <p className="footnote">Expense Tracker v1.11.0</p>
+        <p className="footnote">Expense Tracker v1.12.0</p>
       </main>
     </Screen>
   );

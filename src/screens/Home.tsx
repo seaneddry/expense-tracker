@@ -6,12 +6,13 @@ import { Icon } from '../components/Icon';
 import { AskBar } from '../components/AskButton';
 import { FriendsCard } from '../components/FriendsCard';
 import { Empty, ErrorNotice, Loading } from '../components/States';
-import { getCategoryBreakdown, getDailyTotals, getHomeCards, getKpis } from '../api';
+import { getCategoryBreakdown, getDailyTotals, getHomePrefs, getKpis } from '../api';
+import { CategoryBudgets } from '../components/CategoryBudgets';
 import { normaliseCards } from '../lib/homeCards';
 import type { HomeCardId, HomeCardPref } from '../lib/homeCards';
 import { useQuery } from '../lib/useQuery';
 import { addMonths, monthLabel, monthStart, pct, rm, rmShort, todayKL } from '../lib/format';
-import type { CategoryRow, DayTotal, Kpis } from '../types';
+import type { DayTotal, Kpis } from '../types';
 
 export function Home() {
   const currentMonth = monthStart(todayKL());
@@ -20,8 +21,8 @@ export function Home() {
   const kpis = useQuery(() => getKpis(month), [month]);
   const cats = useQuery(() => getCategoryBreakdown(month), [month]);
   const days = useQuery(() => getDailyTotals(month), [month]);
-  // Card layout from Settings > Home cards. Until it loads (or if it fails), show the default layout.
-  const cards = useQuery(getHomeCards, []);
+  // Layout from Settings > Home layout. Until it loads (or if it fails), show the defaults.
+  const prefs = useQuery(getHomePrefs, []);
 
   const switcher = (
     <div className="month-switch">
@@ -63,9 +64,9 @@ export function Home() {
         {k && k.transaction_count > 0 ? (
           <>
             <Hero k={k} />
-            <Tiles k={k} cards={cards.data ?? normaliseCards(null)} />
+            <Tiles k={k} cards={prefs.data?.cards ?? normaliseCards(null)} />
             <FriendsCard />
-            {cats.data ? <Categories rows={cats.data} /> : null}
+            {cats.data ? <CategoryBudgets rows={cats.data} view={prefs.data?.categoryView ?? 'attention'} /> : null}
             {days.data ? <Heat days={days.data} month={month} /> : null}
           </>
         ) : null}
@@ -157,37 +158,6 @@ function Tiles({ k, cards }: { k: Kpis; cards: HomeCardPref[] }) {
         <Fragment key={c.id}>{render[c.id]()}</Fragment>
       ))}
     </div>
-  );
-}
-
-function Categories({ rows }: { rows: CategoryRow[] }) {
-  const visible = rows.filter((r) => r.amount > 0 || r.budget > 0);
-  if (visible.length === 0) return null;
-  return (
-    <section className="group">
-      <div className="group-header">By category</div>
-      <div className="group-body">
-        {visible.map((r) => {
-          const over = r.amount > r.budget;
-          const width = r.budget > 0 ? Math.min(r.amount / r.budget, 1) * 100 : r.amount > 0 ? 100 : 0;
-          return (
-            <div className="cat-row" key={r.category_id}>
-              <div className="cat-top">
-                <span className="cat-name">{r.name}</span>
-                <span className="cat-amount num">
-                  <strong>{rm(r.amount)}</strong>
-                  {r.budget > 0 || r.amount > 0 ? <> of {rmShort(r.budget)}</> : null}
-                  {over && r.amount > 0 ? <span className="over"> · {rmShort(r.amount - r.budget)} over</span> : null}
-                </span>
-              </div>
-              <div className="bar" aria-hidden="true">
-                <span className={over && r.amount > 0 ? 'is-over' : ''} style={{ width: `${width}%` }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
   );
 }
 
