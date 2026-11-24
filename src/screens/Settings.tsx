@@ -66,7 +66,6 @@ export function Settings() {
               <Icon name="chevron-right" size={18} />
             </Link>
           </div>
-          <div className="group-footer">Expenses you flagged to review later.</div>
         </div>
 
         <div className="group">

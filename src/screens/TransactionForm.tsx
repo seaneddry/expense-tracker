@@ -327,7 +327,6 @@ export function TransactionForm() {
                   <label className="row">
                     <span className="row-label">
                       Split with friends
-                      <span className="row-sub">Your share is logged, the rest goes to IOUs</span>
                     </span>
                     <span className="switch">
                       <input type="checkbox" checked={split} onChange={(e) => setSplit(e.target.checked)} />
@@ -445,7 +444,6 @@ export function TransactionForm() {
                 <label className="row">
                   <span className="row-label">
                     To check
-                    <span className="row-sub">Flag it to review later</span>
                   </span>
                   <span className="switch">
                     <input type="checkbox" checked={needsReview} onChange={(e) => setNeedsReview(e.target.checked)} />
