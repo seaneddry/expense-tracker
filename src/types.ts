@@ -61,6 +61,12 @@ export interface Kpis {
   income_cover_months: number;
   top3_pct: number;
   no_spend_days: number;
+  /** 'habits' = pace follows your usual pattern (2+ months of history), 'even' = budget split evenly. */
+  pace_mode?: 'habits' | 'even';
+  /** Fixed bills ("Count in budget pace") already counted in the pace by today. */
+  pace_fixed_by_today?: number;
+  /** Names of the recurring items counted as fixed bills in the pace. */
+  pace_fixed_items?: string[];
 }
 
 export interface MonthTotal {
@@ -96,6 +102,8 @@ export interface RecurringItem {
   monthly_cost: number;
   alert_active: boolean;
   paid: boolean;
+  /** Counted as a fixed bill in Home's budget pace. Read from recurring_items, not the overview view. */
+  count_in_pace?: boolean;
 }
 
 export interface RecurringInput {
@@ -110,6 +118,7 @@ export interface RecurringInput {
   payment_method: string | null;
   notes: string | null;
   url: string | null;
+  count_in_pace?: boolean;
 }
 
 export interface RecurringSummary {

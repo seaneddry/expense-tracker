@@ -40,6 +40,7 @@ export function SubscriptionForm() {
   const [method, setMethod] = useState('');
   const [url, setUrl] = useState('');
   const [notes, setNotes] = useState('');
+  const [inPace, setInPace] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const loaded = useRef(false);
@@ -63,6 +64,7 @@ export function SubscriptionForm() {
       setMethod(e.payment_method ?? '');
       setUrl(e.url ?? '');
       setNotes(e.notes ?? '');
+      setInPace(Boolean(e.count_in_pace));
     }
   }, [existing.data]);
 
@@ -106,6 +108,7 @@ export function SubscriptionForm() {
       payment_method: method.trim() || null,
       url: url.trim() || null,
       notes: notes.trim() || null,
+      count_in_pace: !isCredit && inPace,
     };
     try {
       if (id) {
@@ -220,6 +223,27 @@ export function SubscriptionForm() {
                     : 'Any date it was or will be charged. The next due date moves forward by itself every cycle.'}
               </div>
             </div>
+
+            {!isCredit ? (
+              <div className="group">
+                <div className="group-body">
+                  <label className="row">
+                    <span className="row-label">
+                      Count in budget pace
+                      <span className="row-sub">For a fixed bill like a car loan</span>
+                    </span>
+                    <span className="switch">
+                      <input type="checkbox" checked={inPace} onChange={(e) => setInPace(e.target.checked)} />
+                      <span className="switch-track" />
+                    </span>
+                  </label>
+                </div>
+                <div className="group-footer">
+                  Home's budget pace allows the full amount from its due date instead of spreading it over the month. Log the
+                  payment as an expense with this same name so it is not counted twice.
+                </div>
+              </div>
+            ) : null}
 
             <div className="group">
               <div className="group-header">Alert before the date</div>

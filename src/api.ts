@@ -274,7 +274,11 @@ export async function listRecurring(): Promise<RecurringItem[]> {
 export async function getRecurring(id: string): Promise<RecurringItem | null> {
   const { data, error } = await supabase.from('recurring_overview').select(OVERVIEW_COLS).eq('id', id).maybeSingle();
   fail(error);
-  return (data as RecurringItem | null) ?? null;
+  if (!data) return null;
+  // The budget-pace switch lives on the table only, so the overview view stays unchanged.
+  const flag = await supabase.from('recurring_items').select('count_in_pace').eq('id', id).maybeSingle();
+  fail(flag.error);
+  return { ...(data as RecurringItem), count_in_pace: Boolean(flag.data?.count_in_pace) };
 }
 
 export async function getRecurringSummary(): Promise<RecurringSummary> {

@@ -24,12 +24,21 @@
 | KPI | Formula |
 |---|---|
 | Average per day | spent ÷ days elapsed this month |
-| Projected month end | average per day × days in month |
-| Expected by today | total budget ÷ days in month × days elapsed |
+| Projected month end | fixed bills for the month + other spending so far ÷ usual share by today |
+| Expected by today (budget pace) | fixed bills due or paid by today + (budget − fixed bills) × usual share by today |
 | Burn rate | spent ÷ expected by today |
 | Savings rate | (income − spent) ÷ income |
 | Income cover | income ÷ average spend of the previous 3 full months |
 | Top 3 categories | combined spend of the 3 biggest categories ÷ spent |
+
+**Budget pace** (since 1.10.0, migration `20261124000000_budget_pace_habits.sql`):
+- *Fixed bills* are recurring items with "Count in budget pace" on (`recurring_items.count_in_pace`).
+  Each counts in full from its due date, or from when it is logged if paid early. An expense counts
+  as the bill when its description matches the item name (ignoring case and spaces).
+- *Usual share by today*: for each of the previous 3 months, the share of that month's other
+  (non-fixed) spending done by this day of the month, averaged. With fewer than 2 months of
+  history it falls back to days elapsed ÷ days in month (the old even split).
+- Without fixed bills and with the even split, every number is the same as before 1.10.0.
 
 "Income cover" was reverse-engineered from the old sheet's "how long can I survive" figure
 (5200 ÷ 3422.08 = 1.52 for Oct 2026). If your original formula differs, change `income_cover_months`.

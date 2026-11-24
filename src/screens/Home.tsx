@@ -94,10 +94,19 @@ function Hero({ k }: { k: Kpis }) {
             <span>Budget pace allows {rmShort(k.expected_by_today)} by today</span>
             <span>{rmShort(k.total_budget)} budget</span>
           </div>
+          <div className="pace-note">{paceNote(k)}</div>
         </>
       ) : null}
     </section>
   );
+}
+
+/** One line under the pace bar saying how the pace is worked out. */
+function paceNote(k: Kpis): string {
+  const fixed = k.pace_fixed_items ?? [];
+  const bills = fixed.length === 0 ? '' : fixed.length === 1 ? fixed[0] : `${fixed.length} fixed bills`;
+  const base = k.pace_mode === 'habits' ? 'Follows your usual spending pattern' : 'Even split until you have 2 months of history';
+  return bills ? `${base} · ${bills} counted on ${fixed.length === 1 ? 'its' : 'their'} due date` : base;
 }
 
 function Tile({ label, value, note, danger }: { label: string; value: string; note?: string; danger?: boolean }) {
